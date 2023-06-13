@@ -5,6 +5,7 @@ import Mathlib.Analysis.Complex.Polynomial
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.RingTheory.RootsOfUnity.Basic
 import Mathlib.Data.Nat.Parity
+import Mathlib.Data.Real.Irrational
 
 noncomputable section
 
@@ -29,9 +30,6 @@ def constructable : IntermediateField ℚ ℝ where
   neg_mem' := sorry
   inv_mem' := sorry
 
--- Unclear if needed...
-theorem is_integral (a : constructable) : IsIntegral ℚ a := sorry
-
 -- Proving statements about constructable numbers by induction
 lemma induction (P : constructable → Prop)
 (base : ∀ a : ℚ, P a)
@@ -48,9 +46,20 @@ def cbrt_two_cubed_eq_2 : (cbrt_two)^3 = 2 := by
   rw[cbrt_two]; norm_num
   rw [←Real.rpow_mul two_nonneg]; norm_num
 
-def p: ℚ[X] := X^3 - 2
+def cbrt_two_irrational: Irrational cbrt_two := by
+  apply irrational_nrt_of_notint_nrt 3 2
+  · 
+    -- Issue with power rewriting, TODO
+    sorry
+  · rintro ⟨y, pf⟩
+    -- cbrt_two has decimal, shouldn't be too impossible.
+    sorry
+  · norm_num
 
-def p_is_deg_three : p.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := (2: ℚ))
+
+def p: ℚ[X] := X^3 - C 2
+
+def p_is_deg_three : p.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
 
 def monic_p : Monic p := by
   apply leadingCoeff_X_pow_sub_C (by norm_num)
@@ -58,6 +67,7 @@ def monic_p : Monic p := by
 def p_nonzero: p ≠ 0 := by 
   apply Monic.ne_zero monic_p
 
+-- Only TODO is the rewriting business.
 def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := by 
   have pow_cubed := eval₂_X_pow (n:=3) (R:= ℚ) (S:= ℝ) (algebraMap ℚ ℝ)
   have pow_cubed_cbrt_two := pow_cubed cbrt_two
@@ -75,15 +85,46 @@ def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := b
 
   apply x_cubed_minus_two_eq_zero
 
+-- TODO: No root means no linear factor...
+lemma irreducible_of_not_root (f : ℚ[X]) (hfdeg : f.degree ≤ 3) (hf : ∀ x, f.eval x ≠ 0) :
+  Irreducible f := sorry
+
+-- Not sure how to prove yet...
 def irreducible_p : Irreducible p := by 
-  sorry
+  have p_leq_3 : p.degree ≤ 3 := by
+    have p_deg_three : p.degree = 3 := by apply degree_X_pow_sub_C (by norm_num) (a := 2)
+    exact le_of_eq p_deg_three
+
+  -- Unclear how to prove this.
+  have eval_nnz : ∀ x, p.eval x ≠ 0 := by
+    intro x
+    intro pxz 
+    rw[p] at pxz
+    apply Irrational.ne_rat cbrt_two_irrational x
+    sorry
+
+  apply irreducible_of_not_root p p_leq_3 eval_nnz
+
+  -- Direct proof would be below.
+  -- apply irreducible_iff.mpr
+  -- constructor
+  -- · 
+  --   intro p_unit
+  --   rw[p] at p_unit
+  --   have x_cubed_deg_zero := natDegree_eq_zero_of_isUnit p_unit
+  --   have x_cubed_deg_three := natDegree_X_pow_sub_C (n:=3) (r := (2: ℚ))
+  --   rw[x_cubed_deg_three] at x_cubed_deg_zero
+  --   contradiction
+  -- · 
+  --   intro p1 p2 h
+  --   sorry
 
 def p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
 
 
 def cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
   refine Iff.mp isAlgebraic_iff_isIntegral ?_
-  apply isAlgebraic_of_mem_rootSet (p:= X^3 - 2) (x:= cbrt_two)
+  apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
   · refine Iff.mpr mem_rootSet ?_
     constructor
     · apply p_nonzero
@@ -130,51 +171,3 @@ lemma cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
     exact even_two_n
 
   contradiction
-
-
-
--- Nonsense scratch below.
-def cbrt_two_poly: ℚ[X] := X^3 - 2
-
-def cbrt_two_poly_splits_in_ℂ: Splits (algebraMap ℚ ℂ) cbrt_two_poly := IsAlgClosed.splits_codomain (k:= ℂ) (K:= ℚ) (f:= algebraMap ℚ ℂ) cbrt_two_poly
-
--- TODO
-def cbrt_two_poly_deg_nz: cbrt_two_poly.degree ≠ 0 := by
-  rw[cbrt_two_poly]
-  sorry
-
-
-
--- TODO: How to get cbrt(2): ℝ here?
-def cbrt_two_roots := Polynomial.exists_root_of_splits (algebraMap ℚ ℂ) (cbrt_two_poly_splits_in_ℂ) (cbrt_two_poly_deg_nz)
-
--- TODO
-def cbrt_two_poly_deg: cbrt_two_poly.natDegree = 3 := by
-  rw[cbrt_two_poly]
-  sorry
-
--- TODO (needed?)
-def cbrt_two_poly_irred: Irreducible cbrt_two_poly := sorry
-
-lemma cbrt_two_poly_degree_three (hx : Polynomial.aeval (a: ℂ) (cbrt_two_poly) = 0) : (minpoly ℚ a).natDegree = 3 := by
-  sorry
-
-theorem cbrt_two_not_constructable (hx : Polynomial.aeval (a: ℝ) (cbrt_two_poly) = 0):
-  ¬(is_constructable_ℂ a) := by
-  intro h
-  have extension_property: deg_pow_two_extension ⟨a,h⟩ := by apply constructable' (cbrt_two_poly) ⟨a, h⟩ hx
-  have ⟨n, nnez, deg_pf⟩ := extension_property
-  have deg_pf' : (minpoly ℚ a).natDegree = 2^n := deg_pf
-
-  -- Derive contradiction: a^3 = 2 so a = cbrt(2), but degree of min-poly of a is a power of 2.
-  sorry
-end
-
-example (z : ℝ) (h : 0 ≤ z) : (z ^ (1/3 : ℝ)) ^ (3 : ℝ) = z :=
-by
-  rw [← Real.rpow_mul h]
-  norm_num
-
-example (h: ∀ (i: ℕ), i > 2 ∧ i > 3): ∀ i, i > 2 := by
-  intro i
-  exact (h i).left
