@@ -1,5 +1,5 @@
 import Mathlib.FieldTheory.IntermediateField
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
+-- import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Algebra.CubicDiscriminant
 import Mathlib.Analysis.Complex.Polynomial
 import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -20,15 +20,6 @@ inductive is_constructable_ℝ : ℝ → Prop
 | mul (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a*b)
 | inv (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ a⁻¹
 | rad (a : ℝ) (hn : n ≠ 0) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
-
-inductive is_constructable_ℂ : ℂ → Prop
-| base (a : ℚ) : is_constructable_ℂ (algebraMap ℚ  ℂ a)
-| add (a b : ℂ) : is_constructable_ℂ a → is_constructable_ℂ b → is_constructable_ℂ (a+b)
-| neg (a : ℂ) : is_constructable_ℂ a → is_constructable_ℂ (-a)
-| mul (a b : ℂ) : is_constructable_ℂ a → is_constructable_ℂ b → is_constructable_ℂ (a*b)
-| inv (a : ℂ) : is_constructable_ℂ a → is_constructable_ℂ a⁻¹
-| rad (a : ℂ) (hn : n ≠ 0) : is_constructable_ℂ (a^2) → is_constructable_ℂ a
-
 
 def constructable : IntermediateField ℚ ℝ where
   carrier := is_constructable_ℝ
@@ -52,41 +43,65 @@ lemma induction (P : constructable → Prop)
 (a : constructable) : P a := sorry
 
 def cbrt_two: ℝ := Real.rpow 2 (1/3)
+def cbrt_two_cubed_eq_2 : (cbrt_two)^3 = 2 := by 
+  have two_nonneg: 0 ≤ (2: ℝ) := by norm_num
+  rw[cbrt_two]; norm_num
+  rw [←Real.rpow_mul two_nonneg]; norm_num
 
-def cbrt_two_is_integral : IsIntegral ℚ cbrt_two := sorry
--- Statement to be proved inductively.
--- Adjoin parentheses
--- \ ] )
--- \ ( [
+def p: ℚ[X] := X^3 - 2
+
+def p_is_deg_three : p.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := (2: ℚ))
+
+def monic_p : Monic p := by
+  apply leadingCoeff_X_pow_sub_C (by norm_num)
+
+def p_nonzero: p ≠ 0 := by 
+  apply Monic.ne_zero monic_p
+
+def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := by 
+  have pow_cubed := eval₂_X_pow (n:=3) (R:= ℚ) (S:= ℝ) (algebraMap ℚ ℝ)
+  have pow_cubed_cbrt_two := pow_cubed cbrt_two
+  -- TODO: something problematic with power maps, but below should work after fixing type issues
+  -- rw[cbrt_two_cubed_eq_2] at pow_cubed_cbrt_two
+  -- TODO: This should be by substitution as well
+  have x_cubed_cbrt_two_eq_two : eval₂ (algebraMap ℚ ℝ) cbrt_two (X ^ 3) = 2 := by sorry
+
+  have two_c : eval₂ (algebraMap ℚ ℝ) cbrt_two (C 2) = 2 := by apply eval₂_C
+
+  have x_cubed_minus_two_eq_zero: eval₂ (algebraMap ℚ ℝ) cbrt_two (X ^ 3 - C 2) = 0 := by 
+    have tmp := eval₂_sub (algebraMap ℚ ℝ) (x:= cbrt_two) (R := ℚ) (S := ℝ) (p := X^3) (q := C 2)
+    rw[x_cubed_cbrt_two_eq_two, two_c, sub_self 2] at tmp
+    exact tmp
+
+  apply x_cubed_minus_two_eq_zero
+
+def irreducible_p : Irreducible p := by 
+  sorry
+
+def p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
+
+
+def cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
+  refine Iff.mp isAlgebraic_iff_isIntegral ?_
+  apply isAlgebraic_of_mem_rootSet (p:= X^3 - 2) (x:= cbrt_two)
+  · refine Iff.mpr mem_rootSet ?_
+    constructor
+    · apply p_nonzero
+    · 
+      rw[←p, p_is_min_poly]
+      simp
+
+
+-- Proposition to be proved inductively.
 def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
 
--- If a number is constructable it sits in a field extension of rank 2^n
+-- If a number is constructable it sits in a field extension of rank 2^n (to be proven)
 lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := sorry
 
 lemma cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
   intro h
-  have c: constructable := ⟨_, h⟩
-
-  -- (2^{1/3})^3 = 2, use later to justify 
-  have cbrt_two_cubed_eq_2 : cbrt_two^(3: ℕ) = 2 := by 
-    have two_nonneg: 0 ≤ (2: ℝ) := by norm_num
-    rw[cbrt_two]
-    norm_num
-    rw [←Real.rpow_mul two_nonneg]
-    norm_num
-
-  have p: ℚ[X] := X^3 - 2
-  -- X^3 is degree 3 and add -2
-  have p_is_deg_three : p.natDegree = 3 := by sorry
-  -- ?
-  have irreducible_p : Irreducible p := by sorry
-  -- Inspection?
-  have monic_p : Monic p := by sorry
-  -- Substitution
-  have cbrt_two_evals_to_zero: Polynomial.eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := by sorry
-
-  have p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
-
+  let c : constructable := ⟨_, h⟩
+  -- (2^{1/3})^3 = 2, use later to justify p is monic
 
   -- (2^{1/3})^3 = 2 -> [ℚ⟮2^{1/3}⟯: ℚ] = 3
   have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
@@ -110,7 +125,6 @@ lemma cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
       rw[nez] at ℚ_adj_cbrt_two_rank_eq_3
       simp at ℚ_adj_cbrt_two_rank_eq_3
 
-  have three_odd : Odd (3) := by simp
   have even_three : Even (3) := by 
     rw[← ℚ_adj_cbrt_two_rank_eq_3]
     exact even_two_n
