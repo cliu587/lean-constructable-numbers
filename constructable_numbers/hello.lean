@@ -76,15 +76,125 @@ def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := b
 
   apply x_cubed_minus_two_eq_zero
 
--- TODO
-def irreducible_p: Irreducible p := by sorry
+/-- **Gauss's Lemma** for `ℤ` states that a primitive integer polynomial is irreducible iff it is
+  irreducible over `ℚ`. -/
+-- theorem is_primitive.int.irreducible_iff_irreducible_map_cast
+--   {p : ℤ[X]} (hp : p.is_primitive) :
+--   irreducible p ↔ irreducible (p.map (int.cast_ring_hom ℚ)) :=
+-- hp.irreducible_iff_irreducible_map_fraction_map
+def gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := sorry
+
+def irreducible_p: Irreducible p := by
+  let p_z: ℤ[X] := X^3 - C 2 
+  have p_z_eq_p : map (algebraMap ℤ ℚ) p_z = p := by 
+    rw[p]; simp
+
+  have p_z_natDeg_eq_3 : p_z.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
+
+  have p_z_primitive : IsPrimitive p_z := by
+    have three_nez: 3 ≠ 0 := by norm_num
+    have : Monic p_z := monic_X_pow_sub_C (2: ℤ) (three_nez)
+    apply this.isPrimitive
+
+  let ideal_2: Ideal ℤ := Ideal.span ({(2: ℤ)})
+
+  have ideal_2_prime: Ideal.IsPrime ideal_2 := by
+    have two_irred: Irreducible (2: ℤ ) := PrincipalIdealRing.irreducible_iff_prime.mpr (Int.prime_two)
+    have two_maximal := by apply PrincipalIdealRing.isMaximal_of_irreducible (two_irred)
+    exact Ideal.IsMaximal.isPrime two_maximal
+
+  -- Eisenstein
+  have p_z_irred : Irreducible p_z := by
+    have p_is_eisenstein : IsEisensteinAt p_z ideal_2 := by
+      constructor
+      · intro h; dsimp at h
+        have zero_lt_3 : 0 < 3 := by norm_num
+        have leading_coeff_one : leadingCoeff ((X^3 - C 2): ℤ[X]) = 1 := leadingCoeff_X_pow_sub_C (zero_lt_3)
+        rw[leading_coeff_one] at h
+        have : 2 ∣ 1 := Ideal.mem_span_singleton.mp h
+        contradiction
+      · intro pow pow_lt_deg; dsimp; dsimp at pow_lt_deg
+        rw[p_z_natDeg_eq_3] at pow_lt_deg
+        sorry
+        -- induction' pow with p hp
+        -- · 
+        --   dsimp
+        --   sorry
+        -- · 
+        --   dsimp
+        --   rw[Nat.succ_eq_add_one]; rw[Nat.succ_eq_add_one] at pow_lt_deg
+        --   sorry
+      · 
+        rw[Ideal.span_singleton_pow]
+        dsimp; norm_num
+        by_contra two_in_4_ideal
+        have : coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
+        rw[this] at two_in_4_ideal
+        have : coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
+        rw[this] at two_in_4_ideal
+        norm_num at two_in_4_ideal
+        have : 4 ∣ 2 := Ideal.mem_span_singleton.mp two_in_4_ideal
+        contradiction
+    apply p_is_eisenstein.irreducible
+    · exact ideal_2_prime
+    · exact p_z_primitive
+    · rw[p_z_natDeg_eq_3]; norm_num
+    
+  have p_z_as_ℚ := (gauss_lemma p_z_primitive).mp p_z_irred
+  rw[←p_z_eq_p]
+  exact p_z_as_ℚ
+
+def p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
+
+def cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
+  refine Iff.mp isAlgebraic_iff_isIntegral ?_
+  apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
+  · refine Iff.mpr mem_rootSet ?_
+    constructor
+    · apply p_nonzero
+    · rw[←p, p_is_min_poly]; simp
+
+def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
+
+-- To prove by induction: (a: constructable) → [ℚ(a) : ℚ] = 2ⁿ
+lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := sorry
+
+-- Main theorem
+theorem cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
+  by_contra h
+  let c : constructable := ⟨_, h⟩
+  -- [ℚ⟮cbrt_two⟯: ℚ] = 3
+  have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
+    rw[←p_is_deg_three, p_is_min_poly]
+    exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
+
+  have ℚ_adj_cbrt_two_rank_eq_two_pow : rank_pow_two_over_ℚ c := constructable_implies_rank_pow_two_over_ℚ c
+
+  -- [ℚ(cbrt_two) : ℚ] = 2ⁿ along with proof 
+  have ⟨(n: ℕ), pf_rank_pow_2_ext⟩ := ℚ_adj_cbrt_two_rank_eq_two_pow
+  rw[pf_rank_pow_2_ext] at ℚ_adj_cbrt_two_rank_eq_3
+
+  have : Even (2^n) := by
+    apply Nat.even_pow.mpr; constructor
+    · exact Nat.even_iff.mpr rfl
+    · by_contra nez
+      rw[nez] at ℚ_adj_cbrt_two_rank_eq_3
+      contradiction
+
+  have : Even (3) := by 
+    rw[← ℚ_adj_cbrt_two_rank_eq_3]
+    exact this
+
+  contradiction
 
 
--- Gauss' Lemma doesn't seem ported: cannot reduce to Z irreducibility.
-def irreducible_p_eisenstein: Irreducible p := by
-  -- have p_is_eisenstein : IsEisensteinAt p (2) (R := ℤ):= sorry
-  sorry
 
+
+
+
+
+
+-- SCRATCH STUFF
 -- Perhaps promising but not sure how to prove
 -- Uses the fact that cbrt_two is irrational so eval x (X^3-2) ≠ 0
 -- for any rational x
@@ -100,7 +210,7 @@ def irreducible_p_not_linear_factor: Irreducible p := by
     · norm_num
 
   -- No root of a degree ≤ 3 polynomial means no linear factor. 
-  -- Probably will use Polynomial.Monic.irreducible_iff_natDegree' ?
+  -- Probably will use Polynomial.Monic.irreducible_iff_natDegree' or rational root test?
   have irreducible_of_not_root (f : ℚ[X]) (hfdeg : f.degree ≤ 3) (hf : ∀ x, ¬(f.eval x = 0)) : Irreducible f := sorry
 
   have p_leq_3 : p.degree ≤ 3 := by
@@ -128,50 +238,3 @@ def irreducible_p_not_linear_factor: Irreducible p := by
 
     sorry
   apply irreducible_of_not_root p p_leq_3 eval_nnz
-
-def p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
-
-def cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
-  refine Iff.mp isAlgebraic_iff_isIntegral ?_
-  apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
-  · refine Iff.mpr mem_rootSet ?_
-    constructor
-    · apply p_nonzero
-    · 
-      rw[←p, p_is_min_poly]
-      simp
-
-
--- Type of proposition constructable numbers satisfies that cbrt_two does not.
-def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
-
--- If a number is constructable it sits in a field extension of rank 2ⁿ (to be proven)
-lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := sorry
-
--- Main theorem
-theorem cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
-  by_contra h
-  let c : constructable := ⟨_, h⟩
-  -- [ℚ⟮cbrt_two⟯: ℚ] = 3
-  have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
-    rw[←p_is_deg_three, p_is_min_poly]
-    exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
-
-  have ℚ_adj_cbrt_two_rank_eq_two_pow : rank_pow_two_over_ℚ c := constructable_implies_rank_pow_two_over_ℚ c
-
-  -- [ℚ(cbrt_two) : ℚ] = 2^n along with proof 
-  have ⟨(n: ℕ), pf_rank_pow_2_ext⟩ := ℚ_adj_cbrt_two_rank_eq_two_pow
-  rw[pf_rank_pow_2_ext] at ℚ_adj_cbrt_two_rank_eq_3
-
-  have even_two_n : Even (2^n) := by
-    apply Nat.even_pow.mpr; constructor
-    · exact Nat.even_iff.mpr rfl
-    · by_contra nez
-      rw[nez] at ℚ_adj_cbrt_two_rank_eq_3
-      contradiction
-
-  have even_three : Even (3) := by 
-    rw[← ℚ_adj_cbrt_two_rank_eq_3]
-    exact even_two_n
-
-  contradiction
