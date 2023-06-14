@@ -85,9 +85,11 @@ def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := b
 def gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := sorry
 
 def irreducible_p: Irreducible p := by
+  -- Show p_z irreducible then apply Gauss
   let p_z: ℤ[X] := X^3 - C 2 
   have p_z_eq_p : map (algebraMap ℤ ℚ) p_z = p := by 
     rw[p]; simp
+  rw[←p_z_eq_p]
 
   have p_z_natDeg_eq_3 : p_z.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
 
@@ -103,7 +105,7 @@ def irreducible_p: Irreducible p := by
     have two_maximal := by apply PrincipalIdealRing.isMaximal_of_irreducible (two_irred)
     exact Ideal.IsMaximal.isPrime two_maximal
 
-  -- Eisenstein
+  -- (X^3 - 2): ℤ[X] irreducible by Eisenstein
   have p_z_irred : Irreducible p_z := by
     have p_is_eisenstein : IsEisensteinAt p_z ideal_2 := by
       constructor
@@ -115,15 +117,20 @@ def irreducible_p: Irreducible p := by
         contradiction
       · intro pow pow_lt_deg; dsimp; dsimp at pow_lt_deg
         rw[p_z_natDeg_eq_3] at pow_lt_deg
-        sorry
-        -- induction' pow with p hp
-        -- · 
-        --   dsimp
-        --   sorry
-        -- · 
-        --   dsimp
-        --   rw[Nat.succ_eq_add_one]; rw[Nat.succ_eq_add_one] at pow_lt_deg
-        --   sorry
+        simp
+        interval_cases pow
+        · 
+          have l1: coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
+          have l2: coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
+          rw[l1,l2]; simp; exact Ideal.mem_span_singleton_self 2
+        · 
+          have l1: coeff (X^3: ℤ[X]) 1 = 0 := by apply coeff_X_pow 3
+          have l2: coeff 2 1 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (one_ne_zero)
+          rw[l1,l2]; simp
+        · 
+          have l1: coeff (X^3: ℤ[X]) 2 = 0 := by apply coeff_X_pow 3
+          have l2: coeff 2 2 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (two_ne_zero)
+          rw[l1,l2]; simp
       · 
         rw[Ideal.span_singleton_pow]
         dsimp; norm_num
@@ -140,9 +147,7 @@ def irreducible_p: Irreducible p := by
     · exact p_z_primitive
     · rw[p_z_natDeg_eq_3]; norm_num
     
-  have p_z_as_ℚ := (gauss_lemma p_z_primitive).mp p_z_irred
-  rw[←p_z_eq_p]
-  exact p_z_as_ℚ
+  exact (gauss_lemma p_z_primitive).mp p_z_irred
 
 def p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic irreducible_p cbrt_two_evals_to_zero monic_p
 
