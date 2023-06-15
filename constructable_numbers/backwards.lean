@@ -27,11 +27,23 @@ inductive is_constructable_ℝ : ℝ → Prop
 
 instance constructable : IntermediateField ℚ ℝ where
   carrier := is_constructable_ℝ
-  mul_mem' := sorry
-  add_mem' := sorry
-  algebraMap_mem' := sorry
-  neg_mem' := sorry
-  inv_mem' := sorry
+  mul_mem' := by
+    intro a b ca cb
+    apply is_constructable_ℝ.mul
+    exact ca; exact cb;
+  add_mem' := by
+    intro a b ca cb
+    apply is_constructable_ℝ.add
+    exact ca; exact cb;
+  algebraMap_mem' := is_constructable_ℝ.base 
+  neg_mem' := by
+    intro a ca
+    apply is_constructable_ℝ.neg
+    exact ca;
+  inv_mem' := by
+    intro a ca
+    apply is_constructable_ℝ.inv
+    exact ca;
 
 -- #check @is_constructable_ℝ.rec (motive := fun _ => P : Prop)
 -- Proving statements about constructable numbers by induction
