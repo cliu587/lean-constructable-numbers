@@ -12,45 +12,88 @@ local macro_rules | `($x ^ $y)   => `(HPow.hPow $x $y)
 
 noncomputable section
 
-open Polynomial
+open Polynomial FiniteDimensional
 
 variable {F : Type} {E : Type}
 
 -- START: Create subfield of constructable numbers and prove they sit in an extension field of ℚ with rank a power of 2.
-inductive is_constructable_ℝ : ℝ → Prop
-| base (a : ℚ) : is_constructable_ℝ (algebraMap ℚ  ℝ a)
-| add (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a+b)
-| neg (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ (-a)
-| mul (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a*b)
-| inv (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ a⁻¹
-| rad (a : ℝ) (hn : n ≠ 0) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
+inductive is_alg_constructable : ℝ → Prop
+| base (a : ℚ) : is_alg_constructable (algebraMap ℚ  ℝ a)
+| add (a b : ℝ) : is_alg_constructable a → is_alg_constructable b → is_alg_constructable (a+b)
+| neg (a : ℝ) : is_alg_constructable a → is_alg_constructable (-a)
+| mul (a b : ℝ) : is_alg_constructable a → is_alg_constructable b → is_alg_constructable (a*b)
+| inv (a : ℝ) : is_alg_constructable a → is_alg_constructable a⁻¹
+| sqrt (a : ℝ) : is_alg_constructable (a^2) → is_alg_constructable a
 
-def constructable : IntermediateField ℚ ℝ where
-  carrier := is_constructable_ℝ
-  mul_mem' := sorry
-  add_mem' := sorry
-  algebraMap_mem' := sorry
-  neg_mem' := sorry
-  inv_mem' := sorry
+instance alg_constructable : IntermediateField ℚ ℝ where
+  carrier := is_alg_constructable
+  mul_mem' := by
+    intro a b ca cb
+    apply is_alg_constructable.mul
+    exact ca; exact cb;
+  add_mem' := by
+    intro a b ca cb
+    apply is_alg_constructable.add
+    exact ca; exact cb;
+  algebraMap_mem' := is_alg_constructable.base 
+  neg_mem' := by
+    intro a ca
+    apply is_alg_constructable.neg
+    exact ca;
+  inv_mem' := by
+    intro a ca
+    apply is_alg_constructable.inv
+    exact ca;
 
+-- #check @is_alg_constructable.rec (motive := fun _ => P : Prop)
 -- Proving statements about constructable numbers by induction
-lemma induction (P : constructable → Prop)
+lemma induction (P : alg_constructable → Prop)
 (base : ∀ a : ℚ, P a)
-(add : ∀ a b : constructable, P a → P b → P (a + b))
-(neg : ∀ a : constructable, P a → P (-a))
-(mul : ∀ a b : constructable, P a → P b → P (a * b))
-(inv : ∀ a : constructable, P a → P a⁻¹)
-(rad : ∀ a : constructable, P (a^2) → P a)
-(a : constructable) : P a := sorry
+(add : ∀ a b : alg_constructable, P a → P b → P (a + b))
+(neg : ∀ a : alg_constructable, P a → P (-a))
+(mul : ∀ a b : alg_constructable, P a → P b → P (a * b))
+(inv : ∀ a : alg_constructable, P a → P a⁻¹)
+(sqrt : ∀ a : alg_constructable, P (a^2) → P a)
+(a : alg_constructable) : P a := by
 
-def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
+  have recursor := is_alg_constructable.rec (motive := fun c ctr => P ⟨c, ctr⟩)
 
--- To prove by induction: (a: constructable) → [ℚ(a) : ℚ] = 2ⁿ
-lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := sorry
+  have base_ind: ∀ (a : ℚ), P ⟨a, is_alg_constructable.base a⟩ := base
 
--- END section
+  have add_ind: ∀ (a b : ℝ) 
+    (ca : is_alg_constructable a) 
+    (cb : is_alg_constructable b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a+b, is_alg_constructable.add a b ca cb⟩ := 
+      fun a b ca cb => add ⟨a, ca⟩ ⟨b, cb⟩
+  
+  have neg_ind : ∀ (a : ℝ) (ca : is_alg_constructable a), 
+    P ⟨a, ca⟩ → P ⟨-a, is_alg_constructable.neg a ca⟩ := 
+    fun a ca => neg ⟨a, ca⟩
+
+  have mul_ind: ∀ (a b : ℝ) 
+    (ca : is_alg_constructable a) 
+    (cb : is_alg_constructable b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a * b, is_alg_constructable.mul a b ca cb⟩ := 
+      fun a b ca cb pa pb => mul ⟨a, ca⟩ ⟨b, cb⟩ pa pb
+
+  have inv_ind: ∀ (a : ℝ) 
+    (ca : is_alg_constructable a),
+    P ⟨a, ca⟩ → P ⟨a⁻¹, is_alg_constructable.inv a ca ⟩ := 
+      fun a ca pa => inv ⟨a, ca⟩ pa
+
+  have sqrt_ind: ∀ (a : ℝ) 
+    (cas : is_alg_constructable (a ^ 2)),
+    P ⟨a^2, cas⟩  → P ⟨a, is_alg_constructable.sqrt a cas⟩ := 
+      fun a cas pas => sqrt ⟨a, is_alg_constructable.sqrt a cas⟩ pas
+
+  apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
 
+def sits_in_normal_extension_of_deg_pow_two (a : alg_constructable): Prop := ∃ K : IntermediateField ℚ ℝ, Normal ℚ K ∧ ∃
+(m : ℕ), finrank ℚ K = 2^m ∧ ↑a ∈ K
+
+lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable) : sits_in_normal_extension_of_deg_pow_two a := by sorry
+-- END forward section
 
 -- START: Prove ∛2 not constructable.
 def cbrt_two: ℝ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
@@ -59,12 +102,12 @@ def cbrt_two_cubed_eq_2 : (cbrt_two)^(3: ℕ) = 2 := by
   have three_nz: (3: ℕ) ≠ (0) := by norm_num
   have cbrt_cubed_rw: ((2:ℝ) ^ ((3:ℝ)⁻¹)) ^ (3: ℕ) = 2 := by
     have tmp := Real.rpow_nat_inv_pow_nat two_nn three_nz
-    dsimp at tmp
-    exact tmp
-  rw[cbrt_two];dsimp; rw[cbrt_cubed_rw]
+    rw [Nat.cast_ofNat] at tmp; assumption
 
--- Create p, and prove p is the min poly of ∛2 and that [ℚ(∛2):ℚ] = 3
--- for that, we need p irreducible AND ∛2 is a root of p AND p monic 
+  rw[cbrt_two, Real.rpow_eq_pow, cbrt_cubed_rw]
+
+-- Prove x^3-2 is the minimal polynomial of ∛2 over ℚ and that [ℚ(∛2):ℚ] = 3
+-- For that, we need p irreducible AND ∛2 is a root of p AND p monic 
 def p: ℚ[X] := X^3 - C 2
 
 def p_is_deg_three : p.natDegree = 3 := natDegree_X_pow_sub_C (n:=3) (r := 2)
@@ -100,7 +143,7 @@ def p_irreducible: Irreducible p := by
   -- Show p_z irreducible then apply Gauss
   let p_z: ℤ[X] := X^3 - C 2 
   have p_z_eq_p : map (algebraMap ℤ ℚ) p_z = p := by 
-    rw[p]; simp
+    rw[p]; simp only [algebraMap_int_eq, map_ofNat, Polynomial.map_sub, Polynomial.map_pow, map_X, Polynomial.map_ofNat]
   rw[←p_z_eq_p]
 
   have p_z_natDeg_eq_3 : p_z.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
@@ -121,31 +164,31 @@ def p_irreducible: Irreducible p := by
   have p_z_irred : Irreducible p_z := by
     have p_is_eisenstein : IsEisensteinAt p_z ideal_2 := by
       constructor
-      · intro h; dsimp at h
+      · intro h;
         have zero_lt_3 : 0 < 3 := by norm_num
         have leading_coeff_one : leadingCoeff ((X^3 - C 2): ℤ[X]) = 1 := leadingCoeff_X_pow_sub_C (zero_lt_3)
         rw[leading_coeff_one] at h
         have : 2 ∣ 1 := Ideal.mem_span_singleton.mp h
         contradiction
-      · intro pow pow_lt_deg; dsimp; dsimp at pow_lt_deg
+      · intro pow pow_lt_deg;
         rw[p_z_natDeg_eq_3] at pow_lt_deg
-        simp
+        simp only [map_ofNat, coeff_sub]
         interval_cases pow
         · 
           have l1: coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
-          rw[l1,l2]; simp; exact Ideal.mem_span_singleton_self 2
+          rw[l1,l2]; simp only [zero_sub, neg_mem_iff]; exact Ideal.mem_span_singleton_self 2
         · 
           have l1: coeff (X^3: ℤ[X]) 1 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 1 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (one_ne_zero)
-          rw[l1,l2]; simp
+          rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
         · 
           have l1: coeff (X^3: ℤ[X]) 2 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 2 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (two_ne_zero)
-          rw[l1,l2]; simp
+          rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
       · 
         rw[Ideal.span_singleton_pow]
-        dsimp; norm_num
+        norm_num
         by_contra two_in_4_ideal
         have : coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
         rw[this] at two_in_4_ideal
@@ -161,40 +204,45 @@ def p_irreducible: Irreducible p := by
     
   exact (gauss_lemma p_z_primitive).mp p_z_irred
 
-lemma p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic p_irreducible cbrt_two_evals_to_zero p_monic
+lemma p_is_min_poly: p = minpoly ℚ cbrt_two := minpoly.eq_of_irreducible_of_monic p_irreducible cbrt_two_evals_to_zero p_monic
 
--- Last step: [ℚ(∛2):ℚ] = 3
+-- Last step: ∛2 is integral over ℚ
 lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
   refine Iff.mp isAlgebraic_iff_isIntegral ?_
   apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
   · refine Iff.mpr mem_rootSet ?_
     constructor
     · apply p_nonzero
-    · rw[←p, p_is_min_poly]; simp
+    · rw[←p, p_is_min_poly]; apply minpoly.aeval
 
--- Main theorem
-theorem cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
+-- Theorem: Cannot double the cube, meaning cannot construct ∛2
+theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
+  -- Assume ∛2 is constructable, and derive a contradiction.
   by_contra cbrt_two_constructable
-  let c : constructable := ⟨_, cbrt_two_constructable⟩
+  let c : alg_constructable := ⟨_, cbrt_two_constructable⟩
 
-  -- [ℚ⟮cbrt_two⟯: ℚ] = 3
-  have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
+  -- [ℚ⟮∛2⟯: ℚ] = 3
+  have ℚ_adj_cbrt_two_rank_eq_3 : finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
     rw[←p_is_deg_three, p_is_min_poly]
     exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
 
-  have ℚ_adj_cbrt_two_rank_eq_two_pow : rank_pow_two_over_ℚ c := constructable_implies_rank_pow_two_over_ℚ c
+  -- ∛2 ∈ L for some extension field L such that [L : ℚ] = 2^m
+  have ⟨L, _, m, rank_eq_two_pow_m, c_in_L⟩ := TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two c
 
-  -- [ℚ(cbrt_two) : ℚ] = 2ⁿ along with proof 
-  have ⟨(n: ℕ), pf_rank_pow_2_ext⟩ := ℚ_adj_cbrt_two_rank_eq_two_pow
-  rw[pf_rank_pow_2_ext] at ℚ_adj_cbrt_two_rank_eq_3
+  -- Apply tower law to conclude [ℚ(∛2): ℚ] | 2^m
+  have : Module ℚ⟮cbrt_two⟯ L := by
+    apply RingHom.toModule
+    exact Subsemiring.inclusion (IntermediateField.adjoin_simple_le_iff.mpr c_in_L)
 
-  -- We now have 2ⁿ = 3 for some natural ℕ - derive some contradiction.
-  have : Even 3 := by
-    have : Even (2^n) := by
-      apply Nat.even_pow.mpr; constructor
-      · exact Nat.even_iff.mpr rfl
-      · by_contra nez
-        rw[nez] at ℚ_adj_cbrt_two_rank_eq_3
-        contradiction
-    rwa[← ℚ_adj_cbrt_two_rank_eq_3]
+  have : FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
+    apply finiteDimensional_of_finrank 
+    rw[ℚ_adj_cbrt_two_rank_eq_3]; exact zero_lt_three
+
+  have : finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by 
+    apply finrank_mul_finrank
+  rw[←this, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq_two_pow_m
+
+  have : 3 ∣ 2 := by 
+    have : 3 ∣ 2^m := dvd_of_mul_right_eq (finrank ℚ⟮cbrt_two⟯ L) rank_eq_two_pow_m
+    apply Nat.Prime.dvd_of_dvd_pow Nat.prime_three this
   contradiction

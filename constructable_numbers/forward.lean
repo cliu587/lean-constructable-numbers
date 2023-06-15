@@ -51,6 +51,7 @@ instance compositum_normal
 
 open FiniteDimensional
 
+
 lemma degree_compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
@@ -63,6 +64,7 @@ lemma pow_of_two_base_lemma (a:F)  : P (algebraMap F (alg_constructable F E) a )
   . rw [←iSup_of_empty Empty.rec]
     exact @IntermediateField.normal_iSup F E _ _ _ Empty Empty.rec Empty.rec -- seems like we can assume F is normal 
   . use 0
+
     constructor
     . simp -- need to find theorem that says the rank of a field over itself is 1
     . apply IntermediateField.algebraMap_mem -- very obvious just typing is incompatible
