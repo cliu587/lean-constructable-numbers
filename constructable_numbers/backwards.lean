@@ -104,9 +104,8 @@ def cbrt_two_cubed_eq_2 : (cbrt_two)^(3: ℕ) = 2 := by
   have three_nz: (3: ℕ) ≠ (0) := by norm_num
   have cbrt_cubed_rw: ((2:ℝ) ^ ((3:ℝ)⁻¹)) ^ (3: ℕ) = 2 := by
     have tmp := Real.rpow_nat_inv_pow_nat two_nn three_nz
-    dsimp at tmp
-    exact tmp
-  rw[cbrt_two];dsimp; rw[cbrt_cubed_rw]
+    dsimp only [Nat.cast_ofNat] at tmp; assumption
+  rw[cbrt_two];dsimp only [Real.rpow_eq_pow]; rw[cbrt_cubed_rw]
 
 -- Create p, and prove p is the min poly of ∛2 and that [ℚ(∛2):ℚ] = 3
 -- for that, we need p irreducible AND ∛2 is a root of p AND p monic 
@@ -145,7 +144,7 @@ def p_irreducible: Irreducible p := by
   -- Show p_z irreducible then apply Gauss
   let p_z: ℤ[X] := X^3 - C 2 
   have p_z_eq_p : map (algebraMap ℤ ℚ) p_z = p := by 
-    rw[p]; simp
+    rw[p]; simp only [algebraMap_int_eq, map_ofNat, Polynomial.map_sub, Polynomial.map_pow, map_X, Polynomial.map_ofNat]
   rw[←p_z_eq_p]
 
   have p_z_natDeg_eq_3 : p_z.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
@@ -166,31 +165,31 @@ def p_irreducible: Irreducible p := by
   have p_z_irred : Irreducible p_z := by
     have p_is_eisenstein : IsEisensteinAt p_z ideal_2 := by
       constructor
-      · intro h; dsimp at h
+      · intro h;
         have zero_lt_3 : 0 < 3 := by norm_num
         have leading_coeff_one : leadingCoeff ((X^3 - C 2): ℤ[X]) = 1 := leadingCoeff_X_pow_sub_C (zero_lt_3)
         rw[leading_coeff_one] at h
         have : 2 ∣ 1 := Ideal.mem_span_singleton.mp h
         contradiction
-      · intro pow pow_lt_deg; dsimp; dsimp at pow_lt_deg
+      · intro pow pow_lt_deg;
         rw[p_z_natDeg_eq_3] at pow_lt_deg
-        simp
+        simp only [map_ofNat, coeff_sub]
         interval_cases pow
         · 
           have l1: coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
-          rw[l1,l2]; simp; exact Ideal.mem_span_singleton_self 2
+          rw[l1,l2]; simp only [zero_sub, neg_mem_iff]; exact Ideal.mem_span_singleton_self 2
         · 
           have l1: coeff (X^3: ℤ[X]) 1 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 1 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (one_ne_zero)
-          rw[l1,l2]; simp
+          rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
         · 
           have l1: coeff (X^3: ℤ[X]) 2 = 0 := by apply coeff_X_pow 3
           have l2: coeff 2 2 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (two_ne_zero)
-          rw[l1,l2]; simp
+          rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
       · 
         rw[Ideal.span_singleton_pow]
-        dsimp; norm_num
+        norm_num
         by_contra two_in_4_ideal
         have : coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
         rw[this] at two_in_4_ideal
@@ -215,7 +214,7 @@ lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
   · refine Iff.mpr mem_rootSet ?_
     constructor
     · apply p_nonzero
-    · rw[←p, p_is_min_poly]; simp
+    · rw[←p, p_is_min_poly]; apply minpoly.aeval
 
 -- Theorem: Cannot double the cube, meaning cannot construct ∛2
 theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
@@ -232,18 +231,19 @@ theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
   have ⟨L, _, m, rank_eq_two_pow_m, c_in_L⟩ := TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two c
 
   -- Apply tower law to conclude [ℚ(∛2): ℚ] | 2^m
-  have L_is_Q_cbrt_two_mod: Module ℚ⟮cbrt_two⟯ L := by
+  have : Module ℚ⟮cbrt_two⟯ L := by
     apply RingHom.toModule
     exact Subsemiring.inclusion (IntermediateField.adjoin_simple_le_iff.mpr c_in_L)
 
-  have mod_finite: FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
+  have : FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
     apply FiniteDimensional.finiteDimensional_of_finrank 
-    rw[ℚ_adj_cbrt_two_rank_eq_3]; simp
+    rw[ℚ_adj_cbrt_two_rank_eq_3]; exact zero_lt_three
 
-  have : finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by apply FiniteDimensional.finrank_mul_finrank
+  have : finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by 
+    apply FiniteDimensional.finrank_mul_finrank
   rw[←this, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq_two_pow_m
 
-  have dvd_problem: 3 ∣ 2 := by 
+  have : 3 ∣ 2 := by 
     have : 3 ∣ 2^m := dvd_of_mul_right_eq (finrank ℚ⟮cbrt_two⟯ L) rank_eq_two_pow_m
     apply Nat.Prime.dvd_of_dvd_pow Nat.prime_three this
   contradiction
