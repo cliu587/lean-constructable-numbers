@@ -91,10 +91,38 @@ lemma induction (P : alg_constructable → Prop)
 
 def rank_pow_two_over_ℚ (a : alg_constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
 
+def TO_PROVE_sits_in_normal_extension_of_deg_pow_two (a : alg_constructable): Prop := ∃ K : IntermediateField ℚ ℝ, Normal ℚ K ∧ ∃
+(m : ℕ), FiniteDimensional.finrank ℚ K = 2^m ∧ ↑a ∈ K
+
+lemma constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable) : TO_PROVE_sits_in_normal_extension_of_deg_pow_two a := by sorry
+
+open FiniteDimensional
 
 lemma IntermediateField.finrank_congr [Field F] [Field E] [Algebra F E] (K L : IntermediateField F E) (h : K = L) : FiniteDimensional.finrank F K = FiniteDimensional.finrank F L := by
   subst h
   rfl
+
+instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+    (K L : IntermediateField F E) [Normal F K] [Normal F L] :
+    Normal F (K ⊔ L : IntermediateField F E) :=
+  sorry
+
+lemma degree_compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+    (K L : IntermediateField F E) [Normal F K] [Normal F L] :
+    finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
+  sorry
+
+lemma sits_in_normal_implies_rank_pow_two (h: TO_PROVE_sits_in_normal_extension_of_deg_pow_two a): rank_pow_two_over_ℚ a := by
+  obtain ⟨L, L_normal, m, rnk_two_m, mem⟩ := h
+
+  -- have tmp := FiniteDimensional.finrank_mul_finrank' (F:=ℚ) (K:=ℚ⟮a⟯) (A:=L)
+
+  -- want: ℚ⟮a⟯ ≤ L, [L:ℚ] = [L:ℚ⟮a⟯] [ℚ⟮a⟯:ℚ], [L:ℚ = 2^m] implies [ℚ⟮a⟯:ℚ] = 2^n.
+  
+
+  sorry
+
+
 
 -- To prove by induction: (a: alg_constructable) → [ℚ(a) : ℚ] = 2ⁿ
 lemma constructable_implies_rank_pow_two_over_ℚ (a: alg_constructable) : rank_pow_two_over_ℚ a := by 
@@ -277,19 +305,24 @@ theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
     rw[←p_is_deg_three, p_is_min_poly]
     exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
 
-  have ℚ_adj_cbrt_two_rank_eq_two_pow : rank_pow_two_over_ℚ c := constructable_implies_rank_pow_two_over_ℚ c
+  -- NEW STUFF
+  have tmp := constructable_implies_sits_in_normal_extension_of_deg_pow_two c
+  obtain ⟨L, L_normal, m, rank_eq, c_in_L⟩ := tmp
+  have tmp_le := IntermediateField.adjoin_simple_le_iff.mpr c_in_L
 
-  -- [ℚ(∛2) : ℚ] = 2ⁿ along with proof 
-  have ⟨(n: ℕ), pf_rank_pow_2_ext⟩ := ℚ_adj_cbrt_two_rank_eq_two_pow
-  rw[pf_rank_pow_2_ext] at ℚ_adj_cbrt_two_rank_eq_3
+  -- WANT: Tower law.
 
-  -- We now have 2ⁿ = 3 for some natural ℕ and derive a contradiction.
-  have : Even 3 := by
-    have : Even (2^n) := by
-      apply Nat.even_pow.mpr; constructor
-      · exact Nat.even_iff.mpr rfl
-      · by_contra nez
-        rw[nez] at ℚ_adj_cbrt_two_rank_eq_3
-        contradiction
-    rwa[← ℚ_adj_cbrt_two_rank_eq_3]
+  -- Want: L is a ℚ⟮cbrt_two⟯ module.
+  have L_is_Q_cbrt_two_mod: Module ℚ⟮cbrt_two⟯ L := sorry
+
+  have mod_finite: FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
+    apply FiniteDimensional.finiteDimensional_of_finrank 
+    rw[ℚ_adj_cbrt_two_rank_eq_3]; simp
+
+  have tower_law_app: finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by apply FiniteDimensional.finrank_mul_finrank
+
+  rw[←tower_law_app, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq
+  -- Now 3 times a natural number = 2
+  have dvd_problem: 3 ∣ 2^m := by apply dvd_of_mul_right_eq (finrank ℚ⟮cbrt_two⟯ L) rank_eq
+  have problem: 3 ∣ (2: ℕ) := by apply Nat.Prime.dvd_of_dvd_pow Nat.prime_three dvd_problem
   contradiction

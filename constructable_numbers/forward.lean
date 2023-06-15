@@ -57,7 +57,7 @@ noncomputable def qa := IntermediateField.adjoin (ℚ) ({a})
 #check (inferInstance : Field ℚ)
 #check (inferInstance : Module ℚ (IntermediateField.adjoin ℚ {a}))
 
--- #check (inferInstance : Module ℚ⟮a⟯ (IntermediateField.adjoin ℚ⟮a⟯ {b}))
+#check (inferInstance : Module qa (IntermediateField.adjoin qa {b}))
 
 
 lemma pw_of_two_add_lemma (a : ℝ) (b : ℝ) (ha: FiniteDimensional.finrank ℚ ℚ⟮a⟯ = m) 
