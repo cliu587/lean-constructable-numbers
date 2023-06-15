@@ -90,11 +90,9 @@ lemma induction (P : alg_constructable → Prop)
 
 
 def sits_in_normal_extension_of_deg_pow_two (a : alg_constructable): Prop := ∃ K : IntermediateField ℚ ℝ, Normal ℚ K ∧ ∃
-(m : ℕ), FiniteDimensional.finrank ℚ K = 2^m ∧ ↑a ∈ K
+(m : ℕ), finrank ℚ K = 2^m ∧ ↑a ∈ K
 
--- TODO
 lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable) : sits_in_normal_extension_of_deg_pow_two a := by sorry
-
 -- END forward section
 
 -- START: Prove ∛2 not constructable.
@@ -104,11 +102,12 @@ def cbrt_two_cubed_eq_2 : (cbrt_two)^(3: ℕ) = 2 := by
   have three_nz: (3: ℕ) ≠ (0) := by norm_num
   have cbrt_cubed_rw: ((2:ℝ) ^ ((3:ℝ)⁻¹)) ^ (3: ℕ) = 2 := by
     have tmp := Real.rpow_nat_inv_pow_nat two_nn three_nz
-    dsimp only [Nat.cast_ofNat] at tmp; assumption
-  rw[cbrt_two];dsimp only [Real.rpow_eq_pow]; rw[cbrt_cubed_rw]
+    rw [Nat.cast_ofNat] at tmp; assumption
 
--- Create p, and prove p is the min poly of ∛2 and that [ℚ(∛2):ℚ] = 3
--- for that, we need p irreducible AND ∛2 is a root of p AND p monic 
+  rw[cbrt_two, Real.rpow_eq_pow, cbrt_cubed_rw]
+
+-- Prove x^3-2 is the minimal polynomial of ∛2 over ℚ and that [ℚ(∛2):ℚ] = 3
+-- For that, we need p irreducible AND ∛2 is a root of p AND p monic 
 def p: ℚ[X] := X^3 - C 2
 
 def p_is_deg_three : p.natDegree = 3 := natDegree_X_pow_sub_C (n:=3) (r := 2)
@@ -205,7 +204,7 @@ def p_irreducible: Irreducible p := by
     
   exact (gauss_lemma p_z_primitive).mp p_z_irred
 
-lemma p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic p_irreducible cbrt_two_evals_to_zero p_monic
+lemma p_is_min_poly: p = minpoly ℚ cbrt_two := minpoly.eq_of_irreducible_of_monic p_irreducible cbrt_two_evals_to_zero p_monic
 
 -- Last step: ∛2 is integral over ℚ
 lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
@@ -223,7 +222,7 @@ theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
   let c : alg_constructable := ⟨_, cbrt_two_constructable⟩
 
   -- [ℚ⟮∛2⟯: ℚ] = 3
-  have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
+  have ℚ_adj_cbrt_two_rank_eq_3 : finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
     rw[←p_is_deg_three, p_is_min_poly]
     exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
 
@@ -236,11 +235,11 @@ theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
     exact Subsemiring.inclusion (IntermediateField.adjoin_simple_le_iff.mpr c_in_L)
 
   have : FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
-    apply FiniteDimensional.finiteDimensional_of_finrank 
+    apply finiteDimensional_of_finrank 
     rw[ℚ_adj_cbrt_two_rank_eq_3]; exact zero_lt_three
 
   have : finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by 
-    apply FiniteDimensional.finrank_mul_finrank
+    apply finrank_mul_finrank
   rw[←this, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq_two_pow_m
 
   have : 3 ∣ 2 := by 
