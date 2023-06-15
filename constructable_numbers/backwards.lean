@@ -12,7 +12,7 @@ local macro_rules | `($x ^ $y)   => `(HPow.hPow $x $y)
 
 noncomputable section
 
-open Polynomial
+open Polynomial FiniteDimensional
 
 variable {F : Type} {E : Type}
 
@@ -24,7 +24,6 @@ inductive is_alg_constructable : ℝ → Prop
 | mul (a b : ℝ) : is_alg_constructable a → is_alg_constructable b → is_alg_constructable (a*b)
 | inv (a : ℝ) : is_alg_constructable a → is_alg_constructable a⁻¹
 | sqrt (a : ℝ) : is_alg_constructable (a^2) → is_alg_constructable a
-
 
 instance alg_constructable : IntermediateField ℚ ℝ where
   carrier := is_alg_constructable
@@ -89,90 +88,14 @@ lemma induction (P : alg_constructable → Prop)
 
   apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
-def rank_pow_two_over_ℚ (a : alg_constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
 
-def TO_PROVE_sits_in_normal_extension_of_deg_pow_two (a : alg_constructable): Prop := ∃ K : IntermediateField ℚ ℝ, Normal ℚ K ∧ ∃
+def sits_in_normal_extension_of_deg_pow_two (a : alg_constructable): Prop := ∃ K : IntermediateField ℚ ℝ, Normal ℚ K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank ℚ K = 2^m ∧ ↑a ∈ K
 
-lemma constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable) : TO_PROVE_sits_in_normal_extension_of_deg_pow_two a := by sorry
-
-open FiniteDimensional
-
-lemma IntermediateField.finrank_congr [Field F] [Field E] [Algebra F E] (K L : IntermediateField F E) (h : K = L) : FiniteDimensional.finrank F K = FiniteDimensional.finrank F L := by
-  subst h
-  rfl
-
-instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
-    (K L : IntermediateField F E) [Normal F K] [Normal F L] :
-    Normal F (K ⊔ L : IntermediateField F E) :=
-  sorry
-
-lemma degree_compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
-    (K L : IntermediateField F E) [Normal F K] [Normal F L] :
-    finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
-  sorry
-
-lemma sits_in_normal_implies_rank_pow_two (h: TO_PROVE_sits_in_normal_extension_of_deg_pow_two a): rank_pow_two_over_ℚ a := by
-  obtain ⟨L, L_normal, m, rnk_two_m, mem⟩ := h
-
-  -- have tmp := FiniteDimensional.finrank_mul_finrank' (F:=ℚ) (K:=ℚ⟮a⟯) (A:=L)
-
-  -- want: ℚ⟮a⟯ ≤ L, [L:ℚ] = [L:ℚ⟮a⟯] [ℚ⟮a⟯:ℚ], [L:ℚ = 2^m] implies [ℚ⟮a⟯:ℚ] = 2^n.
-  
-
-  sorry
-
-
-
--- To prove by induction: (a: alg_constructable) → [ℚ(a) : ℚ] = 2ⁿ
-lemma constructable_implies_rank_pow_two_over_ℚ (a: alg_constructable) : rank_pow_two_over_ℚ a := by 
-  apply induction rank_pow_two_over_ℚ
-  · intro a
-    use 0; simp
-    exact SubfieldClass.coe_rat_mem ⊥ a
-  · intro a b ha hb
-    -- TODO: Requires some proofs.
-    have : rank_pow_two_over_ℚ (a + b) := sorry
-    assumption
-
-  · intro a ⟨n, ha⟩
-    use n; simp; 
-    rw[←ha]
-    apply IntermediateField.finrank_congr
-    apply le_antisymm
-    . rw [IntermediateField.adjoin_simple_le_iff]
-      apply IntermediateField.neg_mem
-      apply IntermediateField.mem_adjoin_simple_self
-    . rw [IntermediateField.adjoin_simple_le_iff]
-      nth_rw 1 [←neg_neg a]
-      apply IntermediateField.neg_mem
-      apply IntermediateField.mem_adjoin_simple_self
-
-  · -- TODO: Requires some proofs.
-    intro a b ha hb
-    have : rank_pow_two_over_ℚ (a * b) := sorry
-    assumption
-
-  · intro a ⟨n, ha⟩
-    use n; simp; rw[←ha]
-    apply IntermediateField.finrank_congr
-    apply le_antisymm
-    · rw [IntermediateField.adjoin_simple_le_iff]
-      apply IntermediateField.inv_mem
-      apply IntermediateField.mem_adjoin_simple_self
-    · rw [IntermediateField.adjoin_simple_le_iff]
-      nth_rw 1 [←inv_inv a]
-      apply IntermediateField.inv_mem
-      apply IntermediateField.mem_adjoin_simple_self
-
-  · -- TODO: Requires some proofs.
-    intro a ⟨n, ha⟩
-    have : rank_pow_two_over_ℚ (a) := sorry
-    assumption
-
+-- TODO
+lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable) : sits_in_normal_extension_of_deg_pow_two a := by sorry
 
 -- END forward section
-
 
 -- START: Prove ∛2 not constructable.
 def cbrt_two: ℝ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
@@ -294,7 +217,7 @@ lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
     · apply p_nonzero
     · rw[←p, p_is_min_poly]; simp
 
--- We cannot double the cube.
+-- Theorem: Cannot double the cube, meaning cannot construct ∛2
 theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
   -- Assume ∛2 is constructable, and derive a contradiction.
   by_contra cbrt_two_constructable
@@ -305,24 +228,98 @@ theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
     rw[←p_is_deg_three, p_is_min_poly]
     exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
 
-  -- NEW STUFF
-  have tmp := constructable_implies_sits_in_normal_extension_of_deg_pow_two c
-  obtain ⟨L, L_normal, m, rank_eq, c_in_L⟩ := tmp
-  have tmp_le := IntermediateField.adjoin_simple_le_iff.mpr c_in_L
+  -- ∛2 ∈ L for some extension field L such that [L : ℚ] = 2^m
+  have ⟨L, _, m, rank_eq_two_pow_m, c_in_L⟩ := TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two c
 
-  -- WANT: Tower law.
-
-  -- Want: L is a ℚ⟮cbrt_two⟯ module.
-  have L_is_Q_cbrt_two_mod: Module ℚ⟮cbrt_two⟯ L := sorry
+  -- Apply tower law to conclude [ℚ(∛2): ℚ] | 2^m
+  have L_is_Q_cbrt_two_mod: Module ℚ⟮cbrt_two⟯ L := by
+    apply RingHom.toModule
+    exact Subsemiring.inclusion (IntermediateField.adjoin_simple_le_iff.mpr c_in_L)
 
   have mod_finite: FiniteDimensional ℚ ℚ⟮cbrt_two⟯ := by
     apply FiniteDimensional.finiteDimensional_of_finrank 
     rw[ℚ_adj_cbrt_two_rank_eq_3]; simp
 
-  have tower_law_app: finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by apply FiniteDimensional.finrank_mul_finrank
+  have : finrank ℚ ℚ⟮cbrt_two⟯ * finrank ℚ⟮cbrt_two⟯ L = finrank ℚ L := by apply FiniteDimensional.finrank_mul_finrank
+  rw[←this, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq_two_pow_m
 
-  rw[←tower_law_app, ℚ_adj_cbrt_two_rank_eq_3] at rank_eq
-  -- Now 3 times a natural number = 2
-  have dvd_problem: 3 ∣ 2^m := by apply dvd_of_mul_right_eq (finrank ℚ⟮cbrt_two⟯ L) rank_eq
-  have problem: 3 ∣ (2: ℕ) := by apply Nat.Prime.dvd_of_dvd_pow Nat.prime_three dvd_problem
+  have dvd_problem: 3 ∣ 2 := by 
+    have : 3 ∣ 2^m := dvd_of_mul_right_eq (finrank ℚ⟮cbrt_two⟯ L) rank_eq_two_pow_m
+    apply Nat.Prime.dvd_of_dvd_pow Nat.prime_three this
   contradiction
+
+-- SCRATCH
+
+-- lemma IntermediateField.finrank_congr [Field F] [Field E] [Algebra F E] (K L : IntermediateField F E) (h : K = L) : FiniteDimensional.finrank F K = FiniteDimensional.finrank F L := by
+--   subst h
+--   rfl
+
+-- instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+--     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
+--     Normal F (K ⊔ L : IntermediateField F E) :=
+--   sorry
+
+-- lemma degree_compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+--     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
+--     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
+--   sorry
+
+--   -- have tmp := FiniteDimensional.finrank_mul_finrank' (F:=ℚ) (K:=ℚ⟮a⟯) (A:=L)
+
+--   -- want: ℚ⟮a⟯ ≤ L, [L:ℚ] = [L:ℚ⟮a⟯] [ℚ⟮a⟯:ℚ], [L:ℚ = 2^m] implies [ℚ⟮a⟯:ℚ] = 2^n.
+  
+
+--   sorry
+
+
+
+
+-- -- Did not bother proving this in generality.
+-- def rank_pow_two_over_ℚ (a : alg_constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
+
+-- -- To prove by induction: (a: alg_constructable) → [ℚ(a) : ℚ] = 2ⁿ
+-- lemma constructable_implies_rank_pow_two_over_ℚ (a: alg_constructable) : rank_pow_two_over_ℚ a := by 
+--   apply induction rank_pow_two_over_ℚ
+--   · intro a
+--     use 0; simp
+--     exact SubfieldClass.coe_rat_mem ⊥ a
+--   · intro a b ha hb
+--     -- TODO: Requires some proofs.
+--     have : rank_pow_two_over_ℚ (a + b) := sorry
+--     assumption
+
+--   · intro a ⟨n, ha⟩
+--     use n; simp; 
+--     rw[←ha]
+--     apply IntermediateField.finrank_congr
+--     apply le_antisymm
+--     . rw [IntermediateField.adjoin_simple_le_iff]
+--       apply IntermediateField.neg_mem
+--       apply IntermediateField.mem_adjoin_simple_self
+--     . rw [IntermediateField.adjoin_simple_le_iff]
+--       nth_rw 1 [←neg_neg a]
+--       apply IntermediateField.neg_mem
+--       apply IntermediateField.mem_adjoin_simple_self
+
+--   · -- TODO: Requires some proofs.
+--     intro a b ha hb
+--     have : rank_pow_two_over_ℚ (a * b) := sorry
+--     assumption
+
+--   · intro a ⟨n, ha⟩
+--     use n; simp; rw[←ha]
+--     apply IntermediateField.finrank_congr
+--     apply le_antisymm
+--     · rw [IntermediateField.adjoin_simple_le_iff]
+--       apply IntermediateField.inv_mem
+--       apply IntermediateField.mem_adjoin_simple_self
+--     · rw [IntermediateField.adjoin_simple_le_iff]
+--       nth_rw 1 [←inv_inv a]
+--       apply IntermediateField.inv_mem
+--       apply IntermediateField.mem_adjoin_simple_self
+
+--   · -- TODO: Requires some proofs.
+--     intro a ⟨n, ha⟩
+--     have : rank_pow_two_over_ℚ (a) := sorry
+--     assumption
+
