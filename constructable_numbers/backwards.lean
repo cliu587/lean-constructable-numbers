@@ -17,82 +17,87 @@ open Polynomial
 variable {F : Type} {E : Type}
 
 -- START: Create subfield of constructable numbers and prove they sit in an extension field of ℚ with rank a power of 2.
-inductive is_constructable_ℝ : ℝ → Prop
-| base (a : ℚ) : is_constructable_ℝ (algebraMap ℚ  ℝ a)
-| add (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a+b)
-| neg (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ (-a)
-| mul (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a*b)
-| inv (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ a⁻¹
-| sqrt (a : ℝ) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
+inductive is_alg_constructable : ℝ → Prop
+| base (a : ℚ) : is_alg_constructable (algebraMap ℚ  ℝ a)
+| add (a b : ℝ) : is_alg_constructable a → is_alg_constructable b → is_alg_constructable (a+b)
+| neg (a : ℝ) : is_alg_constructable a → is_alg_constructable (-a)
+| mul (a b : ℝ) : is_alg_constructable a → is_alg_constructable b → is_alg_constructable (a*b)
+| inv (a : ℝ) : is_alg_constructable a → is_alg_constructable a⁻¹
+| sqrt (a : ℝ) : is_alg_constructable (a^2) → is_alg_constructable a
 
 
-instance constructable : IntermediateField ℚ ℝ where
-  carrier := is_constructable_ℝ
+instance alg_constructable : IntermediateField ℚ ℝ where
+  carrier := is_alg_constructable
   mul_mem' := by
     intro a b ca cb
-    apply is_constructable_ℝ.mul
+    apply is_alg_constructable.mul
     exact ca; exact cb;
   add_mem' := by
     intro a b ca cb
-    apply is_constructable_ℝ.add
+    apply is_alg_constructable.add
     exact ca; exact cb;
-  algebraMap_mem' := is_constructable_ℝ.base 
+  algebraMap_mem' := is_alg_constructable.base 
   neg_mem' := by
     intro a ca
-    apply is_constructable_ℝ.neg
+    apply is_alg_constructable.neg
     exact ca;
   inv_mem' := by
     intro a ca
-    apply is_constructable_ℝ.inv
+    apply is_alg_constructable.inv
     exact ca;
 
--- #check @is_constructable_ℝ.rec (motive := fun _ => P : Prop)
+-- #check @is_alg_constructable.rec (motive := fun _ => P : Prop)
 -- Proving statements about constructable numbers by induction
-lemma induction (P : constructable → Prop)
+lemma induction (P : alg_constructable → Prop)
 (base : ∀ a : ℚ, P a)
-(add : ∀ a b : constructable, P a → P b → P (a + b))
-(neg : ∀ a : constructable, P a → P (-a))
-(mul : ∀ a b : constructable, P a → P b → P (a * b))
-(inv : ∀ a : constructable, P a → P a⁻¹)
-(sqrt : ∀ a : constructable, P (a^2) → P a)
-(a : constructable) : P a := by
+(add : ∀ a b : alg_constructable, P a → P b → P (a + b))
+(neg : ∀ a : alg_constructable, P a → P (-a))
+(mul : ∀ a b : alg_constructable, P a → P b → P (a * b))
+(inv : ∀ a : alg_constructable, P a → P a⁻¹)
+(sqrt : ∀ a : alg_constructable, P (a^2) → P a)
+(a : alg_constructable) : P a := by
 
-  have recursor := is_constructable_ℝ.rec (motive := fun c ctr => P ⟨c, ctr⟩)
+  have recursor := is_alg_constructable.rec (motive := fun c ctr => P ⟨c, ctr⟩)
 
-  have base_ind: ∀ (a : ℚ), P ⟨a, is_constructable_ℝ.base a⟩ := base
+  have base_ind: ∀ (a : ℚ), P ⟨a, is_alg_constructable.base a⟩ := base
 
   have add_ind: ∀ (a b : ℝ) 
-    (ca : is_constructable_ℝ a) 
-    (cb : is_constructable_ℝ b), 
-    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a+b, is_constructable_ℝ.add a b ca cb⟩ := 
+    (ca : is_alg_constructable a) 
+    (cb : is_alg_constructable b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a+b, is_alg_constructable.add a b ca cb⟩ := 
       fun a b ca cb => add ⟨a, ca⟩ ⟨b, cb⟩
   
-  have neg_ind : ∀ (a : ℝ) (ca : is_constructable_ℝ a), 
-    P ⟨a, ca⟩ → P ⟨-a, is_constructable_ℝ.neg a ca⟩ := 
+  have neg_ind : ∀ (a : ℝ) (ca : is_alg_constructable a), 
+    P ⟨a, ca⟩ → P ⟨-a, is_alg_constructable.neg a ca⟩ := 
     fun a ca => neg ⟨a, ca⟩
 
   have mul_ind: ∀ (a b : ℝ) 
-    (ca : is_constructable_ℝ a) 
-    (cb : is_constructable_ℝ b), 
-    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a * b, is_constructable_ℝ.mul a b ca cb⟩ := 
+    (ca : is_alg_constructable a) 
+    (cb : is_alg_constructable b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a * b, is_alg_constructable.mul a b ca cb⟩ := 
       fun a b ca cb pa pb => mul ⟨a, ca⟩ ⟨b, cb⟩ pa pb
 
   have inv_ind: ∀ (a : ℝ) 
-    (ca : is_constructable_ℝ a),
-    P ⟨a, ca⟩ → P ⟨a⁻¹, is_constructable_ℝ.inv a ca ⟩ := 
+    (ca : is_alg_constructable a),
+    P ⟨a, ca⟩ → P ⟨a⁻¹, is_alg_constructable.inv a ca ⟩ := 
       fun a ca pa => inv ⟨a, ca⟩ pa
 
   have sqrt_ind: ∀ (a : ℝ) 
-    (cas : is_constructable_ℝ (a ^ 2)),
-    P ⟨a^2, cas⟩  → P ⟨a, is_constructable_ℝ.sqrt a cas⟩ := 
-      fun a cas pas => sqrt ⟨a, is_constructable_ℝ.sqrt a cas⟩ pas
+    (cas : is_alg_constructable (a ^ 2)),
+    P ⟨a^2, cas⟩  → P ⟨a, is_alg_constructable.sqrt a cas⟩ := 
+      fun a cas pas => sqrt ⟨a, is_alg_constructable.sqrt a cas⟩ pas
 
   apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
-def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
+def rank_pow_two_over_ℚ (a : alg_constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
 
--- To prove by induction: (a: constructable) → [ℚ(a) : ℚ] = 2ⁿ
-lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := by 
+
+lemma IntermediateField.finrank_congr [Field F] [Field E] [Algebra F E] (K L : IntermediateField F E) (h : K = L) : FiniteDimensional.finrank F K = FiniteDimensional.finrank F L := by
+  subst h
+  rfl
+
+-- To prove by induction: (a: alg_constructable) → [ℚ(a) : ℚ] = 2ⁿ
+lemma constructable_implies_rank_pow_two_over_ℚ (a: alg_constructable) : rank_pow_two_over_ℚ a := by 
   apply induction rank_pow_two_over_ℚ
   · intro a
     use 0; simp
@@ -101,17 +106,37 @@ lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_
     -- TODO: Requires some proofs.
     have : rank_pow_two_over_ℚ (a + b) := sorry
     assumption
+
   · intro a ⟨n, ha⟩
     use n; simp; 
     rw[←ha]
-    sorry
+    apply IntermediateField.finrank_congr
+    apply le_antisymm
+    . rw [IntermediateField.adjoin_simple_le_iff]
+      apply IntermediateField.neg_mem
+      apply IntermediateField.mem_adjoin_simple_self
+    . rw [IntermediateField.adjoin_simple_le_iff]
+      nth_rw 1 [←neg_neg a]
+      apply IntermediateField.neg_mem
+      apply IntermediateField.mem_adjoin_simple_self
+
   · -- TODO: Requires some proofs.
     intro a b ha hb
     have : rank_pow_two_over_ℚ (a * b) := sorry
     assumption
+
   · intro a ⟨n, ha⟩
-    use n; simp; 
-    sorry
+    use n; simp; rw[←ha]
+    apply IntermediateField.finrank_congr
+    apply le_antisymm
+    · rw [IntermediateField.adjoin_simple_le_iff]
+      apply IntermediateField.inv_mem
+      apply IntermediateField.mem_adjoin_simple_self
+    · rw [IntermediateField.adjoin_simple_le_iff]
+      nth_rw 1 [←inv_inv a]
+      apply IntermediateField.inv_mem
+      apply IntermediateField.mem_adjoin_simple_self
+
   · -- TODO: Requires some proofs.
     intro a ⟨n, ha⟩
     have : rank_pow_two_over_ℚ (a) := sorry
@@ -119,7 +144,6 @@ lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_
 
 
 -- END forward section
-
 
 
 -- START: Prove ∛2 not constructable.
@@ -243,10 +267,10 @@ lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
     · rw[←p, p_is_min_poly]; simp
 
 -- We cannot double the cube.
-theorem cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
+theorem cbrt_two_not_constructable: ¬is_alg_constructable cbrt_two := by
   -- Assume ∛2 is constructable, and derive a contradiction.
   by_contra cbrt_two_constructable
-  let c : constructable := ⟨_, cbrt_two_constructable⟩
+  let c : alg_constructable := ⟨_, cbrt_two_constructable⟩
 
   -- [ℚ⟮∛2⟯: ℚ] = 3
   have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
