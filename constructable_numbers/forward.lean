@@ -52,9 +52,16 @@ set_option maxHeartbeats 0
 -- #check (Set.univ : Set X)
 -- #check X = (Set.univ : Set X)
 
+variable (a: ℝ) (b: ℝ)
+noncomputable def qa := IntermediateField.adjoin (ℚ) ({a})
+#check (inferInstance : Field ℚ)
+#check (inferInstance : Module ℚ (IntermediateField.adjoin ℚ {a}))
+
+-- #check (inferInstance : Module ℚ⟮a⟯ (IntermediateField.adjoin ℚ⟮a⟯ {b}))
+
 
 lemma pw_of_two_add_lemma (a : ℝ) (b : ℝ) (ha: FiniteDimensional.finrank ℚ ℚ⟮a⟯ = m) 
-(hb: FiniteDimensional.finrank ℚ ℚ⟮b⟯ = n) (hab : FiniteDimensional.finrank ℚ ℚ⟮a+b⟯ = l) :
+(hb: FiniteDimensional.finrank ℚ ℚ⟮b⟯ = n) (hab : FiniteDimensional.finrank ℚ ℚ⟮a+b⟯ = l) (haab : FiniteDimensional.finrank ℚ⟮a⟯ ((ℚ⟮a⟯)⟮b⟯) = (k: ℕ)) :
  l ∣ (m*n) := by
   have Q_sub_Qa : ⊥ ≤ ℚ⟮a⟯ := by 
     exact bot_le  

@@ -23,9 +23,9 @@ inductive is_constructable_ℝ : ℝ → Prop
 | neg (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ (-a)
 | mul (a b : ℝ) : is_constructable_ℝ a → is_constructable_ℝ b → is_constructable_ℝ (a*b)
 | inv (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ a⁻¹
-| rad (a : ℝ) (hn : n ≠ 0) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
+| sqrt (a : ℝ) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
 
-def constructable : IntermediateField ℚ ℝ where
+instance constructable : IntermediateField ℚ ℝ where
   carrier := is_constructable_ℝ
   mul_mem' := sorry
   add_mem' := sorry
@@ -33,6 +33,7 @@ def constructable : IntermediateField ℚ ℝ where
   neg_mem' := sorry
   inv_mem' := sorry
 
+-- #check @is_constructable_ℝ.rec (motive := fun _ => P : Prop)
 -- Proving statements about constructable numbers by induction
 lemma induction (P : constructable → Prop)
 (base : ∀ a : ℚ, P a)
@@ -40,15 +41,55 @@ lemma induction (P : constructable → Prop)
 (neg : ∀ a : constructable, P a → P (-a))
 (mul : ∀ a b : constructable, P a → P b → P (a * b))
 (inv : ∀ a : constructable, P a → P a⁻¹)
-(rad : ∀ a : constructable, P (a^2) → P a)
-(a : constructable) : P a := sorry
+(sqrt : ∀ a : constructable, P (a^2) → P a)
+(a : constructable) : P a := by
+
+  have recursor := is_constructable_ℝ.rec (motive := fun c ctr => P ⟨c, ctr⟩)
+
+  have base_ind: ∀ (a : ℚ), P ⟨a, is_constructable_ℝ.base a⟩ := base
+
+  have add_ind: ∀ (a b : ℝ) 
+    (ca : is_constructable_ℝ a) 
+    (cb : is_constructable_ℝ b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a+b, is_constructable_ℝ.add a b ca cb⟩ := 
+      fun a b ca cb => add ⟨a, ca⟩ ⟨b, cb⟩
+  
+  have neg_ind : ∀ (a : ℝ) (ca : is_constructable_ℝ a), 
+    P ⟨a, ca⟩ → P ⟨-a, is_constructable_ℝ.neg a ca⟩ := 
+    fun a ca => neg ⟨a, ca⟩
+
+  have mul_ind: ∀ (a b : ℝ) 
+    (ca : is_constructable_ℝ a) 
+    (cb : is_constructable_ℝ b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a * b, is_constructable_ℝ.mul a b ca cb⟩ := 
+      fun a b ca cb pa pb => mul ⟨a, ca⟩ ⟨b, cb⟩ pa pb
+
+  have inv_ind: ∀ (a : ℝ) 
+    (ca : is_constructable_ℝ a),
+    P ⟨a, ca⟩ → P ⟨a⁻¹, is_constructable_ℝ.inv a ca ⟩ := 
+      fun a ca pa => inv ⟨a, ca⟩ pa
+
+  have sqrt_ind: ∀ (a : ℝ) 
+    (cas : is_constructable_ℝ (a ^ 2)),
+    P ⟨a^2, cas⟩  → P ⟨a, is_constructable_ℝ.sqrt a cas⟩ := 
+      fun a cas pas => sqrt ⟨a, is_constructable_ℝ.sqrt a cas⟩ pas
+
+  apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
 def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimensional.finrank ℚ ℚ⟮a.val⟯ = 2^n
 
 -- To prove by induction: (a: constructable) → [ℚ(a) : ℚ] = 2ⁿ
-lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := sorry
+lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := by 
+  apply induction rank_pow_two_over_ℚ
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
 
--- END section
+
+-- END forward section
 
 
 
@@ -163,7 +204,7 @@ def p_irreducible: Irreducible p := by
 
 lemma p_is_min_poly: p = minpoly ℚ cbrt_two := by apply minpoly.eq_of_irreducible_of_monic p_irreducible cbrt_two_evals_to_zero p_monic
 
--- Last step: [ℚ(∛2):ℚ] = 3
+-- Last step: ∛2 is integral over ℚ
 lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
   refine Iff.mp isAlgebraic_iff_isIntegral ?_
   apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
@@ -172,23 +213,24 @@ lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
     · apply p_nonzero
     · rw[←p, p_is_min_poly]; simp
 
--- Main theorem
+-- We cannot double the cube.
 theorem cbrt_two_not_constructable: ¬is_constructable_ℝ cbrt_two := by
+  -- Assume ∛2 is constructable, and derive a contradiction.
   by_contra cbrt_two_constructable
   let c : constructable := ⟨_, cbrt_two_constructable⟩
 
-  -- [ℚ⟮cbrt_two⟯: ℚ] = 3
+  -- [ℚ⟮∛2⟯: ℚ] = 3
   have ℚ_adj_cbrt_two_rank_eq_3 : FiniteDimensional.finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 
     rw[←p_is_deg_three, p_is_min_poly]
     exact IntermediateField.adjoin.finrank cbrt_two_is_integral 
 
   have ℚ_adj_cbrt_two_rank_eq_two_pow : rank_pow_two_over_ℚ c := constructable_implies_rank_pow_two_over_ℚ c
 
-  -- [ℚ(cbrt_two) : ℚ] = 2ⁿ along with proof 
+  -- [ℚ(∛2) : ℚ] = 2ⁿ along with proof 
   have ⟨(n: ℕ), pf_rank_pow_2_ext⟩ := ℚ_adj_cbrt_two_rank_eq_two_pow
   rw[pf_rank_pow_2_ext] at ℚ_adj_cbrt_two_rank_eq_3
 
-  -- We now have 2ⁿ = 3 for some natural ℕ - derive some contradiction.
+  -- We now have 2ⁿ = 3 for some natural ℕ and derive a contradiction.
   have : Even 3 := by
     have : Even (2^n) := by
       apply Nat.even_pow.mpr; constructor
