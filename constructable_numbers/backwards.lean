@@ -146,7 +146,7 @@ def p_irreducible: Irreducible p := by
     rw[p]; simp only [algebraMap_int_eq, map_ofNat, Polynomial.map_sub, Polynomial.map_pow, map_X, Polynomial.map_ofNat]
   rw[←p_z_eq_p]
 
-  have p_z_natDeg_eq_3 : p_z.natDegree = 3 := by apply natDegree_X_pow_sub_C (n:=3) (r := 2)
+  have p_z_natDeg_eq_3 : p_z.natDegree = 3 := natDegree_X_pow_sub_C
 
   have p_z_primitive : IsPrimitive p_z := by
     have three_nez: 3 ≠ 0 := by norm_num
@@ -156,7 +156,7 @@ def p_irreducible: Irreducible p := by
   let ideal_2: Ideal ℤ := Ideal.span ({(2: ℤ)})
 
   have ideal_2_prime: Ideal.IsPrime ideal_2 := by
-    have two_irred: Irreducible (2: ℤ ) := PrincipalIdealRing.irreducible_iff_prime.mpr (Int.prime_two)
+    have two_irred: Irreducible (2: ℤ) := PrincipalIdealRing.irreducible_iff_prime.mpr (Int.prime_two)
     have two_maximal := by apply PrincipalIdealRing.isMaximal_of_irreducible (two_irred)
     exact Ideal.IsMaximal.isPrime two_maximal
 
@@ -176,15 +176,15 @@ def p_irreducible: Irreducible p := by
         interval_cases pow
         · 
           have l1: coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
-          have l2: coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
+          have l2: coeff 2 0 = (2: ℤ) := coeff_C_zero
           rw[l1,l2]; simp only [zero_sub, neg_mem_iff]; exact Ideal.mem_span_singleton_self 2
         · 
           have l1: coeff (X^3: ℤ[X]) 1 = 0 := by apply coeff_X_pow 3
-          have l2: coeff 2 1 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (one_ne_zero)
+          have l2: coeff 2 1 = (0: ℤ) := coeff_C_ne_zero (one_ne_zero)
           rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
         · 
           have l1: coeff (X^3: ℤ[X]) 2 = 0 := by apply coeff_X_pow 3
-          have l2: coeff 2 2 = (0: ℤ) := by apply coeff_C_ne_zero (a:=2) (two_ne_zero)
+          have l2: coeff 2 2 = (0: ℤ) := coeff_C_ne_zero (two_ne_zero)
           rw[l1,l2]; simp only [sub_self, Submodule.zero_mem]
       · 
         rw[Ideal.span_singleton_pow]
@@ -192,7 +192,7 @@ def p_irreducible: Irreducible p := by
         by_contra two_in_4_ideal
         have : coeff (X^3: ℤ[X]) 0 = 0 := by apply coeff_X_pow 3
         rw[this] at two_in_4_ideal
-        have : coeff 2 0 = (2: ℤ) := by apply coeff_C_zero (a:=2)
+        have : coeff 2 0 = (2: ℤ) := coeff_C_zero
         rw[this] at two_in_4_ideal
         norm_num at two_in_4_ideal
         have : 4 ∣ 2 := Ideal.mem_span_singleton.mp two_in_4_ideal
@@ -212,7 +212,7 @@ lemma cbrt_two_is_integral : IsIntegral ℚ cbrt_two := by
   apply isAlgebraic_of_mem_rootSet (p:= X^3 - C 2) (x:= cbrt_two)
   · refine Iff.mpr mem_rootSet ?_
     constructor
-    · apply p_nonzero
+    · exact p_nonzero
     · rw[←p, p_is_min_poly]; apply minpoly.aeval
 
 -- Theorem: Cannot double the cube, meaning cannot construct ∛2
