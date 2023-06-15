@@ -25,6 +25,7 @@ inductive is_constructable_ℝ : ℝ → Prop
 | inv (a : ℝ) : is_constructable_ℝ a → is_constructable_ℝ a⁻¹
 | sqrt (a : ℝ) : is_constructable_ℝ (a^2) → is_constructable_ℝ a
 
+
 instance constructable : IntermediateField ℚ ℝ where
   carrier := is_constructable_ℝ
   mul_mem' := by
@@ -113,7 +114,7 @@ lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_
     sorry
   · -- TODO: Requires some proofs.
     intro a ⟨n, ha⟩
-    have : rank_pow_two_over_ℚ (a ^ 2) := sorry
+    have : rank_pow_two_over_ℚ (a) := sorry
     assumption
 
 
