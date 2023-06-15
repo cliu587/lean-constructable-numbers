@@ -93,12 +93,28 @@ def rank_pow_two_over_ℚ (a : constructable) : Prop := ∃(n: ℕ), FiniteDimen
 -- To prove by induction: (a: constructable) → [ℚ(a) : ℚ] = 2ⁿ
 lemma constructable_implies_rank_pow_two_over_ℚ (a: constructable) : rank_pow_two_over_ℚ a := by 
   apply induction rank_pow_two_over_ℚ
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-  · sorry
+  · intro a
+    use 0; simp
+    exact SubfieldClass.coe_rat_mem ⊥ a
+  · intro a b ha hb
+    -- TODO: Requires some proofs.
+    have : rank_pow_two_over_ℚ (a + b) := sorry
+    assumption
+  · intro a ⟨n, ha⟩
+    use n; simp; 
+    rw[←ha]
+    sorry
+  · -- TODO: Requires some proofs.
+    intro a b ha hb
+    have : rank_pow_two_over_ℚ (a * b) := sorry
+    assumption
+  · intro a ⟨n, ha⟩
+    use n; simp; 
+    sorry
+  · -- TODO: Requires some proofs.
+    intro a ⟨n, ha⟩
+    have : rank_pow_two_over_ℚ (a ^ 2) := sorry
+    assumption
 
 
 -- END forward section
