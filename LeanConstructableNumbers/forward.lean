@@ -12,7 +12,7 @@ open FiniteDimensional
 set_option maxHeartbeats 0
 set_option synthInstance.maxHeartbeats 1000000
 open Polynomial
-variable (F : Type _) [Field F] (E : Type _) [Field E] [Algebra F E] [IsAlgClosed E]
+variable (F : Type _) [Field F] (E : Type _) [Field E] [Algebra F E] 
 
 inductive is_alg_constructable : E → Prop  where
 | base (a : F) : is_alg_constructable (algebraMap F E a)
@@ -92,13 +92,13 @@ lemma induction (P : alg_constructable F E → Prop)
 def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal F K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
-
--- Sorry'ed lemmas
+-- Should be hot off the presses in Mathlib.
 instance compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     Normal F (K ⊔ L : IntermediateField F E) :=
   sorry
 
+-- Sorry'ed lemmas
 lemma degree_compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
@@ -245,8 +245,8 @@ lemma P_induction_sqrt (a: alg_constructable F E)
   let L := IntermediateField.adjoin F (Polynomial.rootSet q E )
   use L  
   constructor
-  . have : Polynomial.Splits (algebraMap F E) q := by 
-      apply IsAlgClosed.splits_codomain
+  . have : Polynomial.Splits (algebraMap F E) q := by sorry
+      -- apply IsAlgClosed.splits_codomain
     have := IntermediateField.adjoin_rootSet_isSplittingField this
     apply Normal.of_isSplittingField q
   use (n + 1) 

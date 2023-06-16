@@ -2,6 +2,7 @@ import Mathlib.FieldTheory.IntermediateField
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.RingTheory.RootsOfUnity.Basic
+import Mathlib.RingTheory.Polynomial.GaussLemma
 
 -- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/!4.234085
 -- Otherwise coersion problems with a ^ b
@@ -11,9 +12,9 @@ noncomputable section
 
 open Polynomial FiniteDimensional
 
--- (Sorry'ed Gauss's Lemma due to not being ported)
-lemma gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := 
-  sorry
+-- https://github.com/leanprover-community/mathlib4/pull/5069 !!
+-- Hot off the presses two days ago.
+lemma gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := IsPrimitive.Int.irreducible_iff_irreducible_map_cast hp
 
 -- This file defines ∛2, p(x) = x³-2, and prove p(x) is the minimal polynomial over ℚ of ∛2.
 def cbrt_two: ℝ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
