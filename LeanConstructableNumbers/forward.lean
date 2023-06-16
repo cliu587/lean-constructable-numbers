@@ -104,8 +104,7 @@ lemma degree_compositum_normal
     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
   sorry
 
-#check(Normal)
-lemma pow_of_two_base_lemma (a:F) : P (algebraMap F (alg_constructable F E) a) := by 
+lemma P_induction_base (a:F) : P (algebraMap F (alg_constructable F E) a) := by 
   use ⊥
   constructor
   . rw [←iSup_of_empty Empty.rec]
@@ -118,7 +117,7 @@ lemma pow_of_two_base_lemma (a:F) : P (algebraMap F (alg_constructable F E) a) :
 
 variable (X : Type)
 
-lemma pw_of_two_add_lemma (a : alg_constructable F E) (b : alg_constructable F E) (ha: P a) 
+lemma P_induction_add (a : alg_constructable F E) (b : alg_constructable F E) (ha: P a) 
 (hb: P b) : P (a + b) := by
   rcases ha with ⟨Ka, ha1, n, ha2, ha3⟩ 
   rcases hb with ⟨Kb, hb1, m, hb2, hb3⟩
@@ -157,7 +156,7 @@ lemma pw_of_two_add_lemma (a : alg_constructable F E) (b : alg_constructable F E
     
 
 
-lemma pw_of_two_mul_lemma (a : alg_constructable F E) (b : alg_constructable F E) 
+lemma P_induction_mul (a : alg_constructable F E) (b : alg_constructable F E) 
 (ha: P a) (hb: P b) :  P (a*b) := by 
   rcases ha with ⟨Ka, ha1, n, ha2, ha3⟩ 
   rcases hb with ⟨Kb, hb1, m, hb2, hb3⟩
@@ -194,7 +193,7 @@ lemma pw_of_two_mul_lemma (a : alg_constructable F E) (b : alg_constructable F E
       . exact aK
       . exact bK
 
-lemma pw_of_two_neg_lemma (a : alg_constructable F E) (ha: P a) : P (-a):= by 
+lemma P_induction_neg (a : alg_constructable F E) (ha: P a) : P (-a):= by 
   rcases ha with ⟨K, h, n, h3, h4⟩  
   use K
   constructor
@@ -205,7 +204,7 @@ lemma pw_of_two_neg_lemma (a : alg_constructable F E) (ha: P a) : P (-a):= by
       . apply IntermediateField.neg_mem
         exact h4
 
-lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := by 
+lemma P_induction_inv (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := by 
   rcases ha with ⟨K, h, n, h3, h4⟩  
   use K
   constructor
@@ -216,7 +215,7 @@ lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := 
       . apply IntermediateField.inv_mem
         exact h4
 
-lemma pw_of_two_rad_lemma (a: alg_constructable F E) 
+lemma P_induction_sqrt (a: alg_constructable F E) 
   (hasq: P (a^2)) : P a  := by 
   rcases hasq with ⟨K, h, n, h3, h4⟩ 
   have h' : ∃ p : F[X], p ≠ 0 ∧ Polynomial.IsSplittingField F K p := by
@@ -273,14 +272,14 @@ lemma pw_of_two_rad_lemma (a: alg_constructable F E)
       . intro h₄
         simp [Polynomial.X_ne_zero]
 
-#check(Polynomial.IsSplittingField.adjoin_rootSet)-- Proof of main proposition using induction.
+-- Proof of main proposition using induction.
 lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by 
   apply induction P
-  . apply pow_of_two_base_lemma
-  · apply pw_of_two_add_lemma
-  · apply pw_of_two_neg_lemma
-  · apply pw_of_two_mul_lemma
-  · apply pw_of_two_inv_lemma
-  · apply pw_of_two_rad_lemma
+  . apply P_induction_base
+  · apply P_induction_add
+  · apply P_induction_neg
+  · apply P_induction_mul
+  · apply P_induction_inv
+  · apply P_induction_sqrt
     
     

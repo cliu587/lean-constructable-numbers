@@ -12,7 +12,8 @@ noncomputable section
 open Polynomial FiniteDimensional
 
 -- (Sorry'ed Gauss's Lemma due to not being ported)
-lemma gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := sorry
+lemma gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := 
+  sorry
 
 -- This file defines ∛2, p(x) = x³-2, and prove p(x) is the minimal polynomial over ℚ of ∛2.
 def cbrt_two: ℝ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
