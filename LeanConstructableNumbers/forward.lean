@@ -3,6 +3,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.FieldTheory.Normal
 
+open FiniteDimensional
 
 set_option maxHeartbeats 0
 set_option synthInstance.maxHeartbeats 1000000
@@ -38,18 +39,63 @@ def alg_constructable : IntermediateField F E where
   inv_mem' := by
     exact is_alg_constructable.inv
 
+
 variable {F E}
+
+-- Proving statements about constructable numbers by induction
+lemma induction (P : alg_constructable F E → Prop)
+(base : ∀ a : F, P ⟨algebraMap F E a, is_alg_constructable.base a⟩)
+(add : ∀ a b : alg_constructable F E, P a → P b → P (a + b))
+(neg : ∀ a : alg_constructable F E, P a → P (-a))
+(mul : ∀ a b : alg_constructable F E , P a → P b → P (a * b))
+(inv : ∀ a : alg_constructable F E, P a → P a⁻¹)
+(sqrt : ∀ a : alg_constructable F E, P (a^2) → P a)
+(a : alg_constructable F E) : P a := by
+
+  have recursor := is_alg_constructable.rec (motive := fun c ctr => P ⟨c, ctr⟩)
+
+  have base_ind: ∀ (a : F), P ⟨algebraMap F E a, is_alg_constructable.base a⟩ := base
+
+  have add_ind: ∀ (a b : E) 
+    (ca : is_alg_constructable F E a) 
+    (cb : is_alg_constructable F E b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a+b, is_alg_constructable.add a b ca cb⟩ := 
+      fun a b ca cb => add ⟨a, ca⟩ ⟨b, cb⟩
+  
+  have neg_ind : ∀ (a : E) (ca : is_alg_constructable F E a), 
+    P ⟨a, ca⟩ → P ⟨-a, is_alg_constructable.neg a ca⟩ := 
+    fun a ca => neg ⟨a, ca⟩
+
+  have mul_ind: ∀ (a b : E) 
+    (ca : is_alg_constructable F E a) 
+    (cb : is_alg_constructable F E b), 
+    P ⟨a, ca⟩ → P ⟨b, cb⟩ → P ⟨a * b, is_alg_constructable.mul a b ca cb⟩ := 
+      fun a b ca cb pa pb => mul ⟨a, ca⟩ ⟨b, cb⟩ pa pb
+
+  have inv_ind: ∀ (a : E) 
+    (ca : is_alg_constructable F E a),
+    P ⟨a, ca⟩ → P ⟨a⁻¹, is_alg_constructable.inv a ca ⟩ := 
+      fun a ca pa => inv ⟨a, ca⟩ pa
+
+  have sqrt_ind: ∀ (a : E) 
+    (cas : is_alg_constructable F E (a ^ 2)),
+    P ⟨a^2, cas⟩  → P ⟨a, is_alg_constructable.rad a cas⟩ := 
+      fun a cas pas => sqrt ⟨a, is_alg_constructable.rad a cas⟩ pas
+
+  apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
+
+
 
 def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal F K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
+lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by sorry
 
 instance compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     Normal F (K ⊔ L : IntermediateField F E) :=
   sorry
 
-open FiniteDimensional
 
 
 lemma degree_compositum_normal
@@ -184,7 +230,7 @@ lemma pw_of_two_rad_lemma (a: E) (L : IntermediateField F E) (ha : a^2 ∈ alg_c
   rcases hasq with ⟨K, h, n, h3, h4⟩ 
   use K⟮a⟯.restrictScalars F --needs to be K(a)?? either way I need more info about L and how to define it in the first place
   constructor
-  . 
+  . sorry
   use (n + 1)
   constructor
   . sorry
