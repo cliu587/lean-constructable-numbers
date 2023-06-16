@@ -3,6 +3,7 @@ import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.RingTheory.RootsOfUnity.Basic
 import Mathlib.RingTheory.Polynomial.GaussLemma
+import Mathlib.Analysis.Complex.Polynomial
 
 -- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/!4.234085
 -- Otherwise coersion problems with a ^ b
