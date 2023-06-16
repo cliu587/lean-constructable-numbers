@@ -1,10 +1,7 @@
 import Mathlib.FieldTheory.IntermediateField
-import Mathlib.Algebra.CubicDiscriminant
-import Mathlib.Analysis.Complex.Polynomial
 import Mathlib.FieldTheory.IsAlgClosed.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.RingTheory.RootsOfUnity.Basic
-import Mathlib.Data.Nat.Parity
-import Mathlib.Data.Real.Irrational
 
 -- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/!4.234085
 -- Otherwise coersion problems with a ^ b
