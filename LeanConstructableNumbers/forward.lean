@@ -93,7 +93,7 @@ def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
 -- Should be hot off the presses in Mathlib.
-instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+instance compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     Normal F (K ⊔ L : IntermediateField F E) := by
   let ϕ : Bool → IntermediateField F E := Bool.rec L K
