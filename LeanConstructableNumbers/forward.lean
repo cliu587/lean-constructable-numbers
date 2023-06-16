@@ -106,10 +106,7 @@ instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
   have h := IntermediateField.normal_iSup F E ϕ
   rwa [iSup_bool_eq] at h
 
-<<<<<<< HEAD
 -- Sorry'ed lemma
-=======
->>>>>>> main
 lemma degree_compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
