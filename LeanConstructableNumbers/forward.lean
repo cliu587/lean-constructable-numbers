@@ -2,13 +2,17 @@ import Mathlib.FieldTheory.IntermediateField
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.FieldTheory.Normal
+import Mathlib.FieldTheory.SplittingField.Construction
+import Mathlib.FieldTheory.Minpoly.Basic
+import Mathlib.LinearAlgebra.FiniteDimensional
+
 
 open FiniteDimensional
 
 set_option maxHeartbeats 0
 set_option synthInstance.maxHeartbeats 1000000
-
-variable (F : Type _) [Field F] (E : Type _) [Field E] [Algebra F E]
+open Polynomial
+variable (F : Type _) [Field F] (E : Type _) [Field E] [Algebra F E] [IsAlgClosed E]
 
 inductive is_alg_constructable : E → Prop  where
 | base (a : F) : is_alg_constructable (algebraMap F E a)
@@ -212,16 +216,30 @@ lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := 
       . apply IntermediateField.inv_mem
         exact h4
 
-lemma pw_of_two_rad_lemma (a: E) (ha : a^2 ∈ alg_constructable F E)
-  (hasq: P ⟨a^2, ha⟩) : P (⟨a, is_alg_constructable.rad a ha⟩ : alg_constructable F E) := by 
+lemma pw_of_two_rad_lemma (a: alg_constructable F E) 
+  (hasq: P (a^2)) : P a  := by 
   rcases hasq with ⟨K, h, n, h3, h4⟩ 
-  use K⟮a⟯.restrictScalars F --needs to be K(a)?? either way I need more info about L and how to define it in the first place
+  have h' : ∃ p : F[X], Polynomial.IsSplittingField F K p := by
+    have : FiniteDimensional F K := by 
+      apply FiniteDimensional.finiteDimensional_of_finrank 
+      rw [h3]
+      norm_num
+    apply Normal.exists_isSplittingField 
+  rcases h' with ⟨p, hp⟩  
+  let q := ( p * ((minpoly F (a^2)).comp (Polynomial.X * Polynomial.X : F[X] )) )
+  let L := IntermediateField.adjoin F (Polynomial.rootSet q E )
+  use L --needs to be K(a)?? either way I need more info about L and how to define it in the first place
   constructor
-  . sorry
-  use (n + 1)
+  . have : Polynomial.Splits (algebraMap F E) q := by sorry
+    have := IntermediateField.adjoin_rootSet_isSplittingField this
+    apply Normal.of_isSplittingField q
+  use (n + 1) --not n+1 actually, n + deg(minpoly(a^2))
   constructor
-  . sorry
-  . sorry
+  . sorry --Need induction of some sort
+  -- base case: [K (split(p)):F] = 2^n
+  -- [K(root of minpoly(a^2)): K] = 2
+  -- finrank_mul_finrank
+  . sorry --should be clear
 
 -- Proof of main proposition using induction.
 lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by 
@@ -231,7 +249,7 @@ lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_de
   · apply pw_of_two_neg_lemma
   · apply pw_of_two_mul_lemma
   · apply pw_of_two_inv_lemma
-  · 
-    sorry
+  · apply pw_of_two_rad_lemma
+    
     -- The format for this seems different from the other ones, where we are not assuming `a` is constructable but rather only `a^2` is constructable.
     -- apply pw_of_two_rad_lemma
