@@ -6,11 +6,14 @@ import Mathlib.FieldTheory.SplittingField.Construction
 import Mathlib.FieldTheory.Minpoly.Basic
 import Mathlib.LinearAlgebra.FiniteDimensional
 
+open FiniteDimensional Polynomial
 
 open FiniteDimensional
 
-set_option maxHeartbeats 0
-set_option synthInstance.maxHeartbeats 1000000
+-- Needed for Martha's laptop
+-- set_option maxHeartbeats 0
+-- set_option synthInstance.maxHeartbeats 1000000
+
 open Polynomial
 variable (F : Type _) [Field F] (E : Type _) [Field E] [Algebra F E] [IsAlgClosed E]
 
@@ -92,8 +95,7 @@ lemma induction (P : alg_constructable F E → Prop)
 def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal F K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
--- Should be hot off the presses in Mathlib.
-instance compositum_normal
+instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     Normal F (K ⊔ L : IntermediateField F E) := by
   let ϕ : Bool → IntermediateField F E := Bool.rec L K
@@ -104,7 +106,10 @@ instance compositum_normal
   have h := IntermediateField.normal_iSup F E ϕ
   rwa [iSup_bool_eq] at h
 
+<<<<<<< HEAD
 -- Sorry'ed lemma
+=======
+>>>>>>> main
 lemma degree_compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L  :=
@@ -287,5 +292,3 @@ lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_de
   · apply P_induction_mul
   · apply P_induction_inv
   · apply P_induction_sqrt
-    
-    
