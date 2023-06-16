@@ -4,10 +4,10 @@ import LeanConstructableNumbers.backwards
 open FiniteDimensional
 
 -- Theorem: Cannot double the cube, meaning cannot construct ∛2
-theorem cbrt_two_not_constructable: ¬is_alg_constructable ℚ ℝ cbrt_two := by
+theorem cbrt_two_not_constructable: ¬is_alg_constructable ℚ ℂ cbrt_two := by
   -- Assume ∛2 is constructable, and derive a contradiction.
   by_contra cbrt_two_constructable
-  let c : alg_constructable ℚ ℝ:= ⟨_, cbrt_two_constructable⟩
+  let c : alg_constructable ℚ ℂ := ⟨_, cbrt_two_constructable⟩
 
   -- [ℚ⟮∛2⟯: ℚ] = 3
   have ℚ_adj_cbrt_two_rank_eq_3 : finrank ℚ ℚ⟮cbrt_two⟯ = 3 := by 

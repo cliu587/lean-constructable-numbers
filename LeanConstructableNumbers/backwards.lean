@@ -17,7 +17,7 @@ open Polynomial FiniteDimensional
 lemma gauss_lemma {p: ℤ[X]} (hp: IsPrimitive p): Irreducible p ↔ Irreducible (map (algebraMap ℤ ℚ) p) := IsPrimitive.Int.irreducible_iff_irreducible_map_cast hp
 
 -- This file defines ∛2, p(x) = x³-2, and prove p(x) is the minimal polynomial over ℚ of ∛2.
-def cbrt_two: ℝ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
+def cbrt_two: ℂ := Real.rpow (2: ℝ) (3⁻¹: ℝ)
 def cbrt_two_cubed_eq_2 : (cbrt_two)^(3: ℕ) = 2 := by 
   have two_nn: 0 ≤ (2: ℝ) := by norm_num
   have three_nz: (3: ℕ) ≠ (0) := by norm_num
@@ -25,7 +25,8 @@ def cbrt_two_cubed_eq_2 : (cbrt_two)^(3: ℕ) = 2 := by
     have tmp := Real.rpow_nat_inv_pow_nat two_nn three_nz
     rw [Nat.cast_ofNat] at tmp; assumption
 
-  rw[cbrt_two, Real.rpow_eq_pow, cbrt_cubed_rw]
+  rw[cbrt_two, Real.rpow_eq_pow]
+  norm_cast
 
 -- Prove x^3-2 is the minimal polynomial of ∛2 over ℚ and that [ℚ(∛2):ℚ] = 3
 -- For that, we need p irreducible AND ∛2 is a root of p AND p monic 
@@ -37,16 +38,16 @@ def p_monic : Monic p := leadingCoeff_X_pow_sub_C (by norm_num)
 
 def p_nonzero: p ≠ 0 := Monic.ne_zero p_monic
 
-def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℝ) (cbrt_two) (p) = 0 := by 
-  have pow_cubed := eval₂_X_pow (n:=3) (R:= ℚ) (S:= ℝ) (algebraMap ℚ ℝ)
-  have x_cubed_cbrt_two_eq_two : eval₂ (algebraMap ℚ ℝ) cbrt_two (X ^ 3) = 2:= by
+def cbrt_two_evals_to_zero: eval₂ (algebraMap ℚ ℂ) (cbrt_two) (p) = 0 := by 
+  have pow_cubed := eval₂_X_pow (n:=3) (R:= ℚ) (S:= ℂ) (algebraMap ℚ ℂ)
+  have x_cubed_cbrt_two_eq_two : eval₂ (algebraMap ℚ ℂ) cbrt_two (X ^ 3) = 2:= by
     have := pow_cubed cbrt_two
     rwa[cbrt_two_cubed_eq_2] at this
     
-  have two_c : eval₂ (algebraMap ℚ ℝ) cbrt_two (C 2) = 2 := by apply eval₂_C
+  have two_c : eval₂ (algebraMap ℚ ℂ) cbrt_two (C 2) = 2 := by rw [eval₂_C]; norm_num
 
-  have x_cubed_minus_two_eq_zero: eval₂ (algebraMap ℚ ℝ) cbrt_two (X ^ 3 - C 2) = 0 := by 
-    have := eval₂_sub (algebraMap ℚ ℝ) (x:= cbrt_two) (R := ℚ) (S := ℝ) (p := X^3) (q := C 2)
+  have x_cubed_minus_two_eq_zero: eval₂ (algebraMap ℚ ℂ) cbrt_two (X ^ 3 - C 2) = 0 := by 
+    have := eval₂_sub (algebraMap ℚ ℂ) (x:= cbrt_two) (R := ℚ) (S := ℂ) (p := X^3) (q := C 2)
     rwa[x_cubed_cbrt_two_eq_two, two_c, sub_self 2] at this
 
   assumption
