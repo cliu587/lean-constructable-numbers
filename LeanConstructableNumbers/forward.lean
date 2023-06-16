@@ -219,29 +219,61 @@ lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := 
 lemma pw_of_two_rad_lemma (a: alg_constructable F E) 
   (hasq: P (a^2)) : P a  := by 
   rcases hasq with ⟨K, h, n, h3, h4⟩ 
-  have h' : ∃ p : F[X], Polynomial.IsSplittingField F K p := by
+  have h' : ∃ p : F[X], p ≠ 0 ∧ Polynomial.IsSplittingField F K p := by
     have : FiniteDimensional F K := by 
       apply FiniteDimensional.finiteDimensional_of_finrank 
       rw [h3]
       norm_num
-    apply Normal.exists_isSplittingField 
-  rcases h' with ⟨p, hp⟩  
-  let q := ( p * ((minpoly F (a^2)).comp (Polynomial.X * Polynomial.X : F[X] )) )
+    have := Normal.exists_isSplittingField F K
+    rcases this with ⟨p, hp⟩
+    by_cases hp' : p = 0   
+    . use C 1
+      constructor
+      . norm_num
+      . rw [IntermediateField.isSplittingField_iff]
+        constructor
+        . apply Polynomial.splits_C 
+        . rw [Polynomial.rootSet_C]
+          rw [IntermediateField.isSplittingField_iff, hp'] at hp
+          rw [Polynomial.rootSet_zero] at hp
+          exact hp.2
+    . use p
+      constructor
+      . exact hp'
+      . exact hp
+  rcases h' with ⟨p, hp0, hp⟩  
+  let q := ( p * ((minpoly F ((a : E)^2)).comp (Polynomial.X * Polynomial.X : F[X] )) )
   let L := IntermediateField.adjoin F (Polynomial.rootSet q E )
-  use L --needs to be K(a)?? either way I need more info about L and how to define it in the first place
+  use L  
   constructor
-  . have : Polynomial.Splits (algebraMap F E) q := by sorry
+  . have : Polynomial.Splits (algebraMap F E) q := by 
+      apply IsAlgClosed.splits_codomain
     have := IntermediateField.adjoin_rootSet_isSplittingField this
     apply Normal.of_isSplittingField q
-  use (n + 1) --not n+1 actually, n + deg(minpoly(a^2))
+  use (n + 1) 
   constructor
-  . sorry --Need induction of some sort
-  -- base case: [K (split(p)):F] = 2^n
-  -- [K(root of minpoly(a^2)): K] = 2
-  -- finrank_mul_finrank
-  . sorry --should be clear
+  . sorry
+  . apply IntermediateField.subset_adjoin
+    rw [Polynomial.mem_rootSet_of_ne, map_mul]
+    rw [Polynomial.aeval_comp, map_mul]
+    rw [Polynomial.aeval_X, sq]
+    rw [minpoly.aeval]
+    rw [mul_zero]
+    apply mul_ne_zero
+    . exact hp0
+    . rw [Ne, Polynomial.comp_eq_zero_iff]
+      push_neg
+      constructor
+      . apply minpoly.ne_zero
+        rw [sq] at h4
+        have := Normal.isIntegral h ⟨(a * a: E), h4⟩ 
+        rw [sq]
+        rw [IntermediateField.isIntegral_iff] at this
+        exact this
+      . intro h₄
+        simp [Polynomial.X_ne_zero]
 
--- Proof of main proposition using induction.
+#check(Polynomial.IsSplittingField.adjoin_rootSet)-- Proof of main proposition using induction.
 lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by 
   apply induction P
   . apply pow_of_two_base_lemma
@@ -251,5 +283,4 @@ lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_de
   · apply pw_of_two_inv_lemma
   · apply pw_of_two_rad_lemma
     
-    -- The format for this seems different from the other ones, where we are not assuming `a` is constructable but rather only `a^2` is constructable.
-    -- apply pw_of_two_rad_lemma
+    
