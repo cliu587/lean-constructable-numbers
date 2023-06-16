@@ -84,13 +84,10 @@ lemma induction (P : alg_constructable F E → Prop)
 
   apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
-
 -- Main proposition, characterizing constructable numbers.
 def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal F K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
--- Proof of main proposition using induction.
-lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by sorry
 
 -- Sorry'ed lemmas
 instance compositum_normal
@@ -104,7 +101,7 @@ lemma degree_compositum_normal
   sorry
 
 #check(Normal)
-lemma pow_of_two_base_lemma (a:F)  : P (algebraMap F (alg_constructable F E) a ) := by 
+lemma pow_of_two_base_lemma (a:F) : P (algebraMap F (alg_constructable F E) a) := by 
   use ⊥
   constructor
   . rw [←iSup_of_empty Empty.rec]
@@ -117,7 +114,7 @@ lemma pow_of_two_base_lemma (a:F)  : P (algebraMap F (alg_constructable F E) a )
 
 variable (X : Type)
 
-lemma pw_of_two_add_lemma (l : ℕ) (a : alg_constructable F E) (b : alg_constructable F E) (ha: P a) 
+lemma pw_of_two_add_lemma (a : alg_constructable F E) (b : alg_constructable F E) (ha: P a) 
 (hb: P b) : P (a + b) := by
   rcases ha with ⟨Ka, ha1, n, ha2, ha3⟩ 
   rcases hb with ⟨Kb, hb1, m, hb2, hb3⟩
@@ -156,7 +153,7 @@ lemma pw_of_two_add_lemma (l : ℕ) (a : alg_constructable F E) (b : alg_constru
     
 
 
-lemma pw_of_two_mul_lemma (l:ℕ) (a : alg_constructable F E) (b : alg_constructable F E) 
+lemma pw_of_two_mul_lemma (a : alg_constructable F E) (b : alg_constructable F E) 
 (ha: P a) (hb: P b) :  P (a*b) := by 
   rcases ha with ⟨Ka, ha1, n, ha2, ha3⟩ 
   rcases hb with ⟨Kb, hb1, m, hb2, hb3⟩
@@ -193,8 +190,6 @@ lemma pw_of_two_mul_lemma (l:ℕ) (a : alg_constructable F E) (b : alg_construct
       . exact aK
       . exact bK
 
-
-
 lemma pw_of_two_neg_lemma (a : alg_constructable F E) (ha: P a) : P (-a):= by 
   rcases ha with ⟨K, h, n, h3, h4⟩  
   use K
@@ -206,7 +201,6 @@ lemma pw_of_two_neg_lemma (a : alg_constructable F E) (ha: P a) : P (-a):= by
       . apply IntermediateField.neg_mem
         exact h4
 
-  
 lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := by 
   rcases ha with ⟨K, h, n, h3, h4⟩  
   use K
@@ -218,8 +212,7 @@ lemma pw_of_two_inv_lemma (a : alg_constructable F E) (ha: P a) : P (a⁻¹) := 
       . apply IntermediateField.inv_mem
         exact h4
 
-
-lemma pw_of_two_rad_lemma (a: E) (L : IntermediateField F E) (ha : a^2 ∈ alg_constructable F E)
+lemma pw_of_two_rad_lemma (a: E) (ha : a^2 ∈ alg_constructable F E)
   (hasq: P ⟨a^2, ha⟩) : P (⟨a, is_alg_constructable.rad a ha⟩ : alg_constructable F E) := by 
   rcases hasq with ⟨K, h, n, h3, h4⟩ 
   use K⟮a⟯.restrictScalars F --needs to be K(a)?? either way I need more info about L and how to define it in the first place
@@ -230,19 +223,15 @@ lemma pw_of_two_rad_lemma (a: E) (L : IntermediateField F E) (ha : a^2 ∈ alg_c
   . sorry
   . sorry
 
-
-
- 
- 
-  
-
-
-
-
-
-  
-
-
-
-  
-
+-- Proof of main proposition using induction.
+lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by 
+  apply induction P
+  . apply pow_of_two_base_lemma
+  · apply pw_of_two_add_lemma
+  · apply pw_of_two_neg_lemma
+  · apply pw_of_two_mul_lemma
+  · apply pw_of_two_inv_lemma
+  · 
+    sorry
+    -- The format for this seems different from the other ones, where we are not assuming `a` is constructable but rather only `a^2` is constructable.
+    -- apply pw_of_two_rad_lemma
