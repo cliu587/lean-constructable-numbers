@@ -85,18 +85,18 @@ lemma induction (P : alg_constructable F E → Prop)
   apply recursor base_ind add_ind neg_ind mul_ind inv_ind sqrt_ind
 
 
-
+-- Main proposition, characterizing constructable numbers.
 def P (a : alg_constructable F E): Prop := ∃ K : IntermediateField F E, Normal F K ∧ ∃
 (m : ℕ), FiniteDimensional.finrank F K = 2^m ∧ ↑a ∈ K  
 
+-- Proof of main proposition using induction.
 lemma TO_PROVE_BY_INDUCTION_constructable_implies_sits_in_normal_extension_of_deg_pow_two (a: alg_constructable F E) : P a:= by sorry
 
+-- Sorry'ed lemmas
 instance compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
     Normal F (K ⊔ L : IntermediateField F E) :=
   sorry
-
-
 
 lemma degree_compositum_normal
     (K L : IntermediateField F E) [Normal F K] [Normal F L] :
@@ -115,13 +115,7 @@ lemma pow_of_two_base_lemma (a:F)  : P (algebraMap F (alg_constructable F E) a )
     . simp -- need to find theorem that says the rank of a field over itself is 1
     . apply IntermediateField.algebraMap_mem -- very obvious just typing is incompatible
 
-  
-
 variable (X : Type)
-
-
-
-  
 
 lemma pw_of_two_add_lemma (l : ℕ) (a : alg_constructable F E) (b : alg_constructable F E) (ha: P a) 
 (hb: P b) : P (a + b) := by
